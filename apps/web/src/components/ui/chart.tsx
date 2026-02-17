@@ -131,7 +131,9 @@ function ChartTooltipContent({
     const value =
       !labelKey && typeof label === "string"
         ? config[label as keyof typeof config]?.label || label
-        : itemConfig?.label;
+        : !labelKey && typeof label === "number"
+          ? label
+          : itemConfig?.label;
 
     if (labelFormatter) {
       return (
@@ -139,7 +141,7 @@ function ChartTooltipContent({
       );
     }
 
-    if (!value) {
+    if (value === null || value === undefined) {
       return null;
     }
 

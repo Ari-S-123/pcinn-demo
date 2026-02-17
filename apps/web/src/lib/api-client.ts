@@ -9,6 +9,10 @@ import type {
   TimeSeriesResult,
 } from "@/types/prediction";
 
+export interface BatchPredictionResponse {
+  predictions: PredictionResult[];
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const API_V1 = `${API_BASE}/api/v1`;
 
@@ -128,6 +132,19 @@ export async function checkHealth(options?: RequestInit): Promise<HealthStatus> 
 export async function getInitialData() {
   const [health, models] = await Promise.all([checkHealth(), getModels()]);
   return { health, models };
+}
+
+export async function predictBatch(
+  inputs: PredictionInput[],
+  model: ModelName,
+  options?: RequestInit,
+): Promise<BatchPredictionResponse> {
+  return fetchJson<BatchPredictionResponse>(`${API_V1}/predict/batch?model=${model}`, {
+    ...options,
+    method: "POST",
+    headers: mergeJsonHeaders(options?.headers),
+    body: JSON.stringify({ inputs }),
+  });
 }
 
 export { ApiError };

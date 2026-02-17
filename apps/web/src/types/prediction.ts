@@ -63,3 +63,41 @@ export interface HealthStatus {
 }
 
 export type ModelName = "baseline_nn" | "pcinn" | "sa_pcinn";
+
+// --- Batch upload types ---
+
+export interface ParsedRow {
+  rowIndex: number;
+  m_molar: number;
+  s_molar: number;
+  i_molar: number;
+  temperature_c: number;
+  time_min: number;
+}
+
+export interface RowError {
+  rowIndex: number;
+  field: string;
+  message: string;
+}
+
+export interface EnrichedRow {
+  rowIndex: number;
+  m_molar: number;
+  s_molar: number;
+  i_molar: number;
+  temperature_c: number;
+  time_min: number;
+  conversion: number;
+  mn: number;
+  mw: number;
+  mz: number;
+  mz_plus_1: number;
+  mv: number;
+  dispersity: number;
+}
+
+export interface ModelBatchResult {
+  model: ModelName;
+  rows: EnrichedRow[];
+}

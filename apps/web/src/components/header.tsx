@@ -30,6 +30,12 @@ export function Header() {
           >
             Compare
           </Link>
+          <Link
+            href="/upload"
+            className="text-muted-foreground font-mono text-[10px] tracking-wider uppercase transition-colors hover:text-[var(--color-chrome)]"
+          >
+            Upload
+          </Link>
           <ThemeToggle />
         </nav>
       </div>

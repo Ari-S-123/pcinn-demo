@@ -3,7 +3,10 @@
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { ModelBatchResult, ModelName } from "@/types/prediction";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { inputFieldDescriptions, outputFieldDescriptions } from "@/lib/field-descriptions";
+import type { EnrichedRow, ModelBatchResult, ModelName } from "@/types/prediction";
 
 const MODEL_COLORS: Record<ModelName, string> = {
   baseline_nn: "#34d399",
@@ -26,7 +29,7 @@ function buildChartConfig(results: ModelBatchResult[]): ChartConfig {
 }
 
 const TAB_TRIGGER_CLASS =
-  "text-muted-foreground border-border data-[state=active]:bg-accent rounded border px-3 py-1.5 font-mono text-[10px] tracking-wider uppercase data-[state=active]:border-[var(--color-chrome)]/50 data-[state=active]:text-[var(--color-chrome)] dark:data-[state=active]:bg-[oklch(0.18_0.01_260)]";
+  "text-muted-foreground border-border data-[state=active]:bg-accent rounded border px-2 py-1.5 font-mono text-[10px] tracking-wider uppercase data-[state=active]:border-[var(--color-chrome)]/50 data-[state=active]:text-[var(--color-chrome)] dark:data-[state=active]:bg-[oklch(0.18_0.01_260)]";
 
 const CHART_CONTAINER_CLASS =
   "border-border bg-muted h-[320px] w-full rounded border p-2 dark:bg-[oklch(0.10_0.012_260)]";
@@ -41,6 +44,45 @@ interface BatchScatterChartInnerProps {
   results: ModelBatchResult[];
 }
 
+type ScatterAxisKey = keyof EnrichedRow;
+type MwMetric = "mn" | "mw" | "mz" | "mz_plus_1" | "mv";
+
+const formatMwAxisTick = (v: number) => `${(v / 1000).toFixed(0)}k`;
+const formatMwTooltipValue = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+
+const MW_METRICS: { key: MwMetric; tabLabel: string; yLabel: string; tooltip: string }[] = [
+  {
+    key: "mn",
+    tabLabel: "Mn vs Conv.",
+    yLabel: "Mn (Da)",
+    tooltip: outputFieldDescriptions.mn,
+  },
+  {
+    key: "mw",
+    tabLabel: "Mw vs Conv.",
+    yLabel: "Mw (Da)",
+    tooltip: outputFieldDescriptions.mw,
+  },
+  {
+    key: "mz",
+    tabLabel: "Mz vs Conv.",
+    yLabel: "Mz (Da)",
+    tooltip: outputFieldDescriptions.mz,
+  },
+  {
+    key: "mz_plus_1",
+    tabLabel: "Mz+1 vs Conv.",
+    yLabel: "Mz+1 (Da)",
+    tooltip: outputFieldDescriptions.mz_plus_1,
+  },
+  {
+    key: "mv",
+    tabLabel: "Mv vs Conv.",
+    yLabel: "Mv (Da)",
+    tooltip: outputFieldDescriptions.mv,
+  },
+];
+
 function ScatterTab({
   results,
   config,
@@ -49,22 +91,24 @@ function ScatterTab({
   xLabel,
   yLabel,
   yDomain,
-  yFormatter,
+  yTickFormatter,
+  yValueFormatter,
 }: {
   results: ModelBatchResult[];
   config: ChartConfig;
-  xKey: string;
-  yKey: string;
+  xKey: ScatterAxisKey;
+  yKey: ScatterAxisKey;
   xLabel: string;
   yLabel: string;
   yDomain?: [number, number];
-  yFormatter?: (v: number) => string;
+  yTickFormatter?: (v: number) => string;
+  yValueFormatter?: (v: number) => string;
 }) {
   const scatterData = results.map((r) => ({
     model: r.model,
     data: r.rows.map((row) => ({
-      x: row[xKey as keyof typeof row] as number,
-      y: row[yKey as keyof typeof row] as number,
+      x: row[xKey],
+      y: row[yKey],
     })),
   }));
 
@@ -98,7 +142,7 @@ function ScatterTab({
           axisLine={{ stroke: "var(--border)" }}
           tick={AXIS_TICK}
           width={50}
-          tickFormatter={yFormatter}
+          tickFormatter={yTickFormatter}
         />
         <Tooltip
           cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
@@ -113,7 +157,11 @@ function ScatterTab({
           labelStyle={{ color: "var(--popover-foreground)" }}
           itemStyle={{ color: "var(--popover-foreground)" }}
           formatter={(value: number, name: string) => {
-            const label = yFormatter ? yFormatter(value) : value.toFixed(4);
+            const label = yValueFormatter
+              ? yValueFormatter(value)
+              : yTickFormatter
+                ? yTickFormatter(value)
+                : value.toFixed(4);
             return [label, name];
           }}
           labelFormatter={(label: number) => `${xLabel}: ${label}`}
@@ -149,55 +197,82 @@ export function BatchScatterChartInner({ results }: BatchScatterChartInnerProps)
   return (
     <div className="panel-inset p-5">
       <h3 className="section-label mb-4 text-[var(--color-chrome-muted)]">Scatter Plots</h3>
-      <Tabs defaultValue="conv-time">
-        <TabsList className="mb-4 gap-2 bg-transparent p-0">
-          <TabsTrigger value="conv-time" className={TAB_TRIGGER_CLASS}>
-            Conversion vs Time
-          </TabsTrigger>
-          <TabsTrigger value="disp-conv" className={TAB_TRIGGER_CLASS}>
-            Dispersity vs Conversion
-          </TabsTrigger>
-          <TabsTrigger value="mw-conv" className={TAB_TRIGGER_CLASS}>
-            Mw vs Conversion
-          </TabsTrigger>
-        </TabsList>
+      <TooltipProvider>
+        <Tabs defaultValue="conv-time">
+          <TabsList className="scrollbar-none mb-4 w-full gap-1.5 overflow-x-auto bg-transparent p-0">
+            <TabsTrigger value="conv-time" className={TAB_TRIGGER_CLASS}>
+              <span className="inline-flex items-center gap-1.5">
+                <span>Conversion vs Time</span>
+                <InfoTooltip
+                  content={`${outputFieldDescriptions.conversion} X-axis: ${inputFieldDescriptions.time_min}`}
+                />
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="disp-conv" className={TAB_TRIGGER_CLASS}>
+              <span className="inline-flex items-center gap-1.5">
+                <span>Disp. vs Conv.</span>
+                <InfoTooltip
+                  content={`${outputFieldDescriptions.dispersity} X-axis: ${outputFieldDescriptions.conversion}`}
+                />
+              </span>
+            </TabsTrigger>
+            {MW_METRICS.map((metric) => (
+              <TabsTrigger
+                key={metric.key}
+                value={`${metric.key}-conv`}
+                className={TAB_TRIGGER_CLASS}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <span>{metric.tabLabel}</span>
+                  <InfoTooltip
+                    content={`${metric.tooltip} X-axis: ${outputFieldDescriptions.conversion}`}
+                  />
+                </span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <TabsContent value="conv-time">
-          <ScatterTab
-            results={results}
-            config={config}
-            xKey="time_min"
-            yKey="conversion"
-            xLabel="Time (min)"
-            yLabel="Conversion"
-            yDomain={[0, 1]}
-          />
-        </TabsContent>
+          <TabsContent value="conv-time">
+            <ScatterTab
+              results={results}
+              config={config}
+              xKey="time_min"
+              yKey="conversion"
+              xLabel="Time (min)"
+              yLabel="Conversion"
+              yDomain={[0, 1]}
+            />
+          </TabsContent>
 
-        <TabsContent value="disp-conv">
-          <ScatterTab
-            results={results}
-            config={config}
-            xKey="conversion"
-            yKey="dispersity"
-            xLabel="Conversion"
-            yLabel="Dispersity"
-            yFormatter={(v: number) => v.toFixed(3)}
-          />
-        </TabsContent>
+          <TabsContent value="disp-conv">
+            <ScatterTab
+              results={results}
+              config={config}
+              xKey="conversion"
+              yKey="dispersity"
+              xLabel="Conversion"
+              yLabel="Dispersity"
+              yTickFormatter={(v: number) => v.toFixed(3)}
+              yValueFormatter={(v: number) => v.toFixed(3)}
+            />
+          </TabsContent>
 
-        <TabsContent value="mw-conv">
-          <ScatterTab
-            results={results}
-            config={config}
-            xKey="conversion"
-            yKey="mw"
-            xLabel="Conversion"
-            yLabel="Mw (Da)"
-            yFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
-          />
-        </TabsContent>
-      </Tabs>
+          {MW_METRICS.map((metric) => (
+            <TabsContent key={metric.key} value={`${metric.key}-conv`}>
+              <ScatterTab
+                results={results}
+                config={config}
+                xKey="conversion"
+                yKey={metric.key}
+                xLabel="Conversion"
+                yLabel={metric.yLabel}
+                yTickFormatter={formatMwAxisTick}
+                yValueFormatter={formatMwTooltipValue}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
+      </TooltipProvider>
     </div>
   );
 }

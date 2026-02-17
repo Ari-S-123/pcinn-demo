@@ -22,7 +22,11 @@ class PredictionResponse(BaseModel):
     mz: float = Field(..., description="Z-average molecular weight [Da].")
     mz_plus_1: float = Field(..., description="(z+1)-average molecular weight [Da].")
     mv: float = Field(..., description="Viscosity-average molecular weight [Da].")
-    dispersity: float = Field(..., description="Molecular weight dispersity (Mw/Mn).")
+    dispersity: float = Field(
+        ...,
+        ge=1.0,
+        description="Molecular weight dispersity (Mw/Mn), clamped to a minimum of 1.0.",
+    )
     raw_outputs: list[float] = Field(
         ...,
         description=(
@@ -59,7 +63,10 @@ class TimeSeriesData(BaseModel):
     mz: list[float] = Field(..., description="Mz series [Da].")
     mz_plus_1: list[float] = Field(..., description="Mz+1 series [Da].")
     mv: list[float] = Field(..., description="Mv series [Da].")
-    dispersity: list[float] = Field(..., description="Dispersity series (Mw/Mn).")
+    dispersity: list[float] = Field(
+        ...,
+        description="Dispersity series (Mw/Mn), each point clamped to a minimum of 1.0.",
+    )
 
 
 class TimeSeriesResponse(BaseModel):
@@ -72,7 +79,10 @@ class TimeSeriesResponse(BaseModel):
     mz: list[float] = Field(..., description="Mz series [Da].")
     mz_plus_1: list[float] = Field(..., description="Mz+1 series [Da].")
     mv: list[float] = Field(..., description="Mv series [Da].")
-    dispersity: list[float] = Field(..., description="Dispersity series (Mw/Mn).")
+    dispersity: list[float] = Field(
+        ...,
+        description="Dispersity series (Mw/Mn), each point clamped to a minimum of 1.0.",
+    )
 
 
 class CompareResponse(BaseModel):

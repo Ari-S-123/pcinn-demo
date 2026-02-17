@@ -1,6 +1,7 @@
 import numpy as np
+import torch
 
-from app.models.inference import load_model, predict
+from app.models.inference import ModelPredictor, load_model, predict
 
 
 def test_load_model():
@@ -41,3 +42,22 @@ def test_predict_clips_conversion_bounds():
     result = predict(p, np.array([3.326, 6.674, 0.0246, 333.0, 0.0]))
     assert 0.0 <= result["conversion"] <= 1.0
     assert len(result["raw_outputs"]) == 6
+
+
+def test_predict_clamps_dispersity_minimum():
+    class FakeModel:
+        def __call__(self, x):
+            row = torch.tensor([0.5, 3.0, 2.0, 2.1, 2.2, 2.3], dtype=torch.float32)
+            return row.repeat(x.shape[0], 1)
+
+    p = ModelPredictor(
+        model=FakeModel(),  # type: ignore[arg-type]
+        scalerx_min=np.zeros(5, dtype=np.float64),
+        scalerx_max=np.ones(5, dtype=np.float64),
+        model_name="fake",
+        fold=0,
+        final_test_loss=0.0,
+        is_best=False,
+    )
+    result = predict(p, np.array([0.2, 0.3, 0.4, 0.5, 0.6]))
+    assert result["dispersity"] == 1.0

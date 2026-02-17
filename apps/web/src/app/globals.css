@@ -256,6 +256,15 @@
   color: var(--muted-foreground);
 }
 
+/* Utility: hide scrollbar while keeping scroll functionality */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* Utility: gradient rule line */
 .rule-line {
   height: 1px;

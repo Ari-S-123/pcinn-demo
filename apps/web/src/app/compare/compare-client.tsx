@@ -5,7 +5,10 @@ import { toast } from "sonner";
 import { PredictionForm } from "@/components/prediction-form";
 import { ComparisonChart } from "@/components/comparison-chart";
 import { Badge } from "@/components/ui/badge";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/info-tooltip";
 import { isAbortError, predictCompare } from "@/lib/api-client";
+import { outputFieldDescriptions } from "@/lib/field-descriptions";
 import type { CompareResult, TimeSeriesInput } from "@/types/prediction";
 
 const MODEL_BADGES = [
@@ -100,6 +103,9 @@ export function CompareClient() {
           conversion: ts.conversion[last],
           mn: ts.mn[last],
           mw: ts.mw[last],
+          mz: ts.mz[last],
+          mz_plus_1: ts.mz_plus_1[last],
+          mv: ts.mv[last],
           dispersity: ts.dispersity[last],
         };
       })
@@ -132,54 +138,97 @@ export function CompareClient() {
               <h3 className="section-label mb-4 text-[var(--color-chrome-muted)]">
                 Final Predictions (at end time)
               </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left font-mono text-xs">
-                  <thead>
-                    <tr className="border-border border-b text-[9px] tracking-[0.12em] text-[var(--color-chrome-muted)] uppercase">
-                      <th className="pr-4 pb-2">Model</th>
-                      <th className="pr-4 pb-2 text-right" title="Fraction of monomer converted">
-                        Conversion
-                      </th>
-                      <th className="pr-4 pb-2 text-right" title="Number-average molecular weight">
-                        <span>
-                          M<sub>n</sub> (Da)
-                        </span>
-                      </th>
-                      <th className="pr-4 pb-2 text-right" title="Weight-average molecular weight">
-                        <span>
-                          M<sub>w</sub> (Da)
-                        </span>
-                      </th>
-                      <th className="pb-2 text-right" title="Distribution breadth (Mw/Mn)">
-                        Dispersity
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {summaryRows.map((row, i) => (
-                      <tr
-                        key={row.key}
-                        className="animate-readout border-border border-b last:border-0"
-                        style={{ animationDelay: `${300 + i * 100}ms` }}
-                      >
-                        <td className="py-2 pr-4">
-                          <Badge variant="outline" className={row.className}>
-                            {row.label}
-                          </Badge>
-                        </td>
-                        <td className="py-2 pr-4 text-right tabular-nums">
-                          {(row.conversion * 100).toFixed(1)}%
-                        </td>
-                        <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mn)}</td>
-                        <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mw)}</td>
-                        <td className="py-2 text-right tabular-nums">
-                          {row.dispersity.toFixed(3)}
-                        </td>
+              <TooltipProvider>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left font-mono text-xs">
+                    <thead>
+                      <tr className="border-border border-b text-[9px] tracking-[0.12em] text-[var(--color-chrome-muted)] uppercase">
+                        <th className="pr-4 pb-2">Model</th>
+                        <th className="pr-4 pb-2 text-right">
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span>Conversion</span>
+                            <InfoTooltip content={outputFieldDescriptions.conversion} />
+                          </span>
+                        </th>
+                        <th className="pr-4 pb-2 text-right">
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span>
+                              M<sub>n</sub> (Da)
+                            </span>
+                            <InfoTooltip content={outputFieldDescriptions.mn} />
+                          </span>
+                        </th>
+                        <th className="pr-4 pb-2 text-right">
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span>
+                              M<sub>w</sub> (Da)
+                            </span>
+                            <InfoTooltip content={outputFieldDescriptions.mw} />
+                          </span>
+                        </th>
+                        <th className="pr-4 pb-2 text-right">
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span>
+                              M<sub>z</sub> (Da)
+                            </span>
+                            <InfoTooltip content={outputFieldDescriptions.mz} />
+                          </span>
+                        </th>
+                        <th className="pr-4 pb-2 text-right">
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span>
+                              M<sub>z+1</sub> (Da)
+                            </span>
+                            <InfoTooltip content={outputFieldDescriptions.mz_plus_1} />
+                          </span>
+                        </th>
+                        <th className="pr-4 pb-2 text-right">
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span>
+                              M<sub>v</sub> (Da)
+                            </span>
+                            <InfoTooltip content={outputFieldDescriptions.mv} />
+                          </span>
+                        </th>
+                        <th className="pb-2 text-right">
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span>Dispersity</span>
+                            <InfoTooltip content={outputFieldDescriptions.dispersity} />
+                          </span>
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {summaryRows.map((row, i) => (
+                        <tr
+                          key={row.key}
+                          className="animate-readout border-border border-b last:border-0"
+                          style={{ animationDelay: `${300 + i * 100}ms` }}
+                        >
+                          <td className="py-2 pr-4">
+                            <Badge variant="outline" className={row.className}>
+                              {row.label}
+                            </Badge>
+                          </td>
+                          <td className="py-2 pr-4 text-right tabular-nums">
+                            {(row.conversion * 100).toFixed(1)}%
+                          </td>
+                          <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mn)}</td>
+                          <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mw)}</td>
+                          <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mz)}</td>
+                          <td className="py-2 pr-4 text-right tabular-nums">
+                            {formatMW(row.mz_plus_1)}
+                          </td>
+                          <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mv)}</td>
+                          <td className="py-2 text-right tabular-nums">
+                            {row.dispersity.toFixed(3)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TooltipProvider>
             </div>
           ) : null}
         </div>

@@ -1,4 +1,7 @@
 import pytest
+from pydantic import ValidationError
+
+from app.schemas.prediction import PredictionResponse
 
 VALID_INPUT = {
     "m_molar": 3.326,
@@ -21,6 +24,7 @@ async def test_predict_valid(client):
     assert "raw_outputs" in data
     assert len(data["raw_outputs"]) == 6
     assert 0.0 <= data["conversion"] <= 1.0
+    assert data["dispersity"] >= 1.0
 
 
 @pytest.mark.asyncio
@@ -52,6 +56,7 @@ async def test_predict_batch(client):
     data = r.json()
     assert len(data["predictions"]) == 2
     assert all(0.0 <= p["conversion"] <= 1.0 for p in data["predictions"])
+    assert all(p["dispersity"] >= 1.0 for p in data["predictions"])
 
 
 @pytest.mark.asyncio
@@ -74,6 +79,7 @@ async def test_predict_timeseries(client):
     assert len(data["conversion"]) == 50
     assert len(data["mw"]) == 50
     assert all(0.0 <= c <= 1.0 for c in data["conversion"])
+    assert all(d >= 1.0 for d in data["dispersity"])
 
 
 @pytest.mark.asyncio
@@ -98,6 +104,7 @@ async def test_predict_compare(client):
     assert len(data["times"]) == 20
     for model_name in ("baseline_nn", "pcinn", "sa_pcinn"):
         assert all(0.0 <= c <= 1.0 for c in data[model_name]["conversion"])
+        assert all(d >= 1.0 for d in data[model_name]["dispersity"])
 
 
 @pytest.mark.asyncio
@@ -118,3 +125,17 @@ async def test_model_info(client):
     assert data["model_name"] == "sa_pcinn"
     assert "scaler_ranges" in data
     assert "served_output_constraints" in data
+
+
+def test_prediction_response_rejects_dispersity_below_one():
+    with pytest.raises(ValidationError):
+        PredictionResponse(
+            conversion=0.42,
+            mn=1000.0,
+            mw=900.0,
+            mz=1100.0,
+            mz_plus_1=1200.0,
+            mv=1050.0,
+            dispersity=0.9,
+            raw_outputs=[0.42, 3.0, 2.95, 3.04, 3.08, 3.02],
+        )

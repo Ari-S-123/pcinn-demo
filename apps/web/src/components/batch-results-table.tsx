@@ -2,6 +2,9 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { inputFieldDescriptions, outputFieldDescriptions } from "@/lib/field-descriptions";
 import type { EnrichedRow, ModelBatchResult, ModelName } from "@/types/prediction";
 
 const MODEL_BADGES: Record<ModelName, { label: string; className: string }> = {
@@ -38,6 +41,22 @@ const COLUMNS = [
   { key: "dispersity", label: "Dispersity", width: "w-20" },
 ] as const;
 
+const columnTooltips: Partial<Record<(typeof COLUMNS)[number]["key"], string>> = {
+  rowIndex: "Row index from the uploaded file after parsing and validation.",
+  m_molar: inputFieldDescriptions.m_molar,
+  s_molar: inputFieldDescriptions.s_molar,
+  i_molar: inputFieldDescriptions.i_molar,
+  temperature_c: inputFieldDescriptions.temperature_c,
+  time_min: inputFieldDescriptions.time_min,
+  conversion: outputFieldDescriptions.conversion,
+  mn: outputFieldDescriptions.mn,
+  mw: outputFieldDescriptions.mw,
+  mz: outputFieldDescriptions.mz,
+  mz_plus_1: outputFieldDescriptions.mz_plus_1,
+  mv: outputFieldDescriptions.mv,
+  dispersity: outputFieldDescriptions.dispersity,
+};
+
 function formatCell(key: string, value: number): string {
   switch (key) {
     case "rowIndex":
@@ -61,33 +80,41 @@ function formatCell(key: string, value: number): string {
 
 function BatchTable({ rows }: { rows: EnrichedRow[] }) {
   return (
-    <div className="h-[400px] overflow-auto">
-      <table className="w-full font-mono text-xs">
-        <thead className="sticky top-0 z-10 bg-[oklch(0.97_0.002_250)] dark:bg-[oklch(0.13_0.01_260)]">
-          <tr className="border-border border-b text-[9px] tracking-[0.12em] text-[var(--color-chrome-muted)] uppercase">
-            {COLUMNS.map((col) => (
-              <th key={col.key} className={`${col.width} px-2 py-2 text-right first:text-left`}>
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, idx) => (
-            <tr key={`${row.rowIndex}-${idx}`} className="border-border border-b last:border-0">
-              {COLUMNS.map((col) => (
-                <td
-                  key={col.key}
-                  className={`${col.width} px-2 py-1 text-right tabular-nums first:text-left`}
-                >
-                  {formatCell(col.key, row[col.key as keyof EnrichedRow] as number)}
-                </td>
-              ))}
+    <TooltipProvider>
+      <div className="h-[400px] overflow-auto">
+        <table className="w-full font-mono text-xs">
+          <thead className="sticky top-0 z-10 bg-[oklch(0.97_0.002_250)] dark:bg-[oklch(0.13_0.01_260)]">
+            <tr className="border-border border-b text-[9px] tracking-[0.12em] text-[var(--color-chrome-muted)] uppercase">
+              {COLUMNS.map((col) => {
+                const tooltip = columnTooltips[col.key];
+                return (
+                  <th key={col.key} className={`${col.width} px-2 py-2 text-right first:text-left`}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span>{col.label}</span>
+                      {tooltip ? <InfoTooltip content={tooltip} /> : null}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr key={`${row.rowIndex}-${idx}`} className="border-border border-b last:border-0">
+                {COLUMNS.map((col) => (
+                  <td
+                    key={col.key}
+                    className={`${col.width} px-2 py-1 text-right tabular-nums first:text-left`}
+                  >
+                    {formatCell(col.key, row[col.key as keyof EnrichedRow] as number)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </TooltipProvider>
   );
 }
 

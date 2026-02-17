@@ -34,6 +34,7 @@
 ## Model Output Semantics
 - The deployed predictive network (`apps/api/app/models/nn_model.py`) has a linear 6-output head.
 - API `conversion` is clipped to `[0, 1]` at serving time in `apps/api/app/models/inference.py`.
+- API `dispersity` is computed as `Mw/Mn` and clamped to a minimum of `1.0` at serving time.
 - API `raw_outputs` remain unclipped raw head outputs (`raw_outputs[0]` is `X_raw`).
 
 ## Commit & Pull Request Guidelines

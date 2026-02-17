@@ -48,7 +48,7 @@ Three trained PyTorch models (`apps/api/artifacts/*.pt`) share the same architec
 3. **Post-process outputs**:
    - conversion head is linear in the model (`X_raw`) and is clipped to `[0,1]` for the served `conversion` field
    - molecular weights are `10^(raw_output)` (log10 reversal)
-   - dispersity is computed as `Mw/Mn`
+   - dispersity is computed as `Mw/Mn` and clamped to a minimum of `1.0`
 4. **Expose diagnostics**: `raw_outputs` returns unclipped raw model head values
 
 Models are loaded once at startup via FastAPI's lifespan context manager (`app/main.py`) into `app.state.predictors`.
@@ -61,7 +61,7 @@ All endpoints under `/api/v1`. Key routes in `app/routers/predict.py`:
 - `POST /predict/timeseries` — predictions across a time range (builds batch with `np.linspace`)
 - `POST /predict/compare` — runs timeseries on all 3 models simultaneously
 - `GET /models` — list available models with metadata
-- `GET /model/info` — model architecture + served output constraints (`conversion` clipped, `raw_outputs[0]` raw)
+- `GET /model/info` — model architecture + served output constraints metadata (`conversion` clipped, `raw_outputs[0]` raw)
 
 Request validation uses Pydantic with domain bounds (e.g., `m_molar: 0.5-5.0`, `temperature_k: 323-363`). Schemas are in `app/schemas/prediction.py`.
 

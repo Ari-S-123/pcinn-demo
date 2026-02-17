@@ -60,6 +60,7 @@ def predict(predictor: ModelPredictor, raw_inputs: np.ndarray) -> dict | list[di
         mz_plus_1 = float(10 ** row[4])
         mv = float(10 ** row[5])
         dispersity = mw / mn if mn > 0 else 0.0
+        dispersity = max(dispersity, 1.0)
         results.append(
             {
                 "conversion": conversion,

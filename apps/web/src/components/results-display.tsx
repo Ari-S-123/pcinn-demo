@@ -2,6 +2,9 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { outputFieldDescriptions } from "@/lib/field-descriptions";
 import type { PredictionResult, ModelName } from "@/types/prediction";
 
 const MODEL_BADGES: Record<ModelName, { label: string; className: string }> = {
@@ -44,12 +47,14 @@ function ResultsSkeleton() {
 
 function ResultCard({
   label,
+  tooltipKey,
   description,
   value,
   unit,
   delay,
 }: {
   label: string;
+  tooltipKey: keyof typeof outputFieldDescriptions;
   description: string;
   value: string;
   unit?: string;
@@ -58,7 +63,10 @@ function ResultCard({
   return (
     <div className="animate-readout panel-inset p-3" style={{ animationDelay: `${delay}ms` }}>
       <p className="font-mono text-[10px] tracking-[0.1em] text-[var(--color-chrome-muted)] uppercase">
-        {label}
+        <span className="inline-flex items-center gap-1.5">
+          <span>{label}</span>
+          <InfoTooltip content={outputFieldDescriptions[tooltipKey]} />
+        </span>
       </p>
       <p className="text-muted-foreground text-[9px] leading-tight">{description}</p>
       <p className="mt-1.5 font-mono text-xl font-light tabular-nums">
@@ -77,61 +85,70 @@ export function ResultsDisplay({ result, model, isLoading }: ResultsDisplayProps
   return isLoading ? (
     <ResultsSkeleton />
   ) : result ? (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Badge variant="outline" className={MODEL_BADGES[model].className}>
-          {MODEL_BADGES[model].label}
-        </Badge>
+    <TooltipProvider>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={MODEL_BADGES[model].className}>
+            {MODEL_BADGES[model].label}
+          </Badge>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <ResultCard
+            label="Conversion"
+            tooltipKey="conversion"
+            description="Fraction of monomer reacted"
+            value={`${(result.conversion * 100).toFixed(1)}%`}
+            delay={0}
+          />
+          <ResultCard
+            label="Mn"
+            tooltipKey="mn"
+            description="Number-avg mol. weight"
+            value={formatMW(result.mn)}
+            unit="Da"
+            delay={50}
+          />
+          <ResultCard
+            label="Mw"
+            tooltipKey="mw"
+            description="Weight-avg mol. weight"
+            value={formatMW(result.mw)}
+            unit="Da"
+            delay={100}
+          />
+          <ResultCard
+            label="Mz"
+            tooltipKey="mz"
+            description="Z-average mol. weight"
+            value={formatMW(result.mz)}
+            unit="Da"
+            delay={150}
+          />
+          <ResultCard
+            label="Mz+1"
+            tooltipKey="mz_plus_1"
+            description="Z+1 average mol. weight"
+            value={formatMW(result.mz_plus_1)}
+            unit="Da"
+            delay={200}
+          />
+          <ResultCard
+            label="Mv"
+            tooltipKey="mv"
+            description="Viscosity-avg mol. weight"
+            value={formatMW(result.mv)}
+            unit="Da"
+            delay={250}
+          />
+          <ResultCard
+            label="Dispersity"
+            tooltipKey="dispersity"
+            description="Distribution breadth (Mw/Mn)"
+            value={result.dispersity.toFixed(3)}
+            delay={300}
+          />
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <ResultCard
-          label="Conversion"
-          description="Fraction of monomer reacted"
-          value={`${(result.conversion * 100).toFixed(1)}%`}
-          delay={0}
-        />
-        <ResultCard
-          label="Mn"
-          description="Number-avg mol. weight"
-          value={formatMW(result.mn)}
-          unit="Da"
-          delay={50}
-        />
-        <ResultCard
-          label="Mw"
-          description="Weight-avg mol. weight"
-          value={formatMW(result.mw)}
-          unit="Da"
-          delay={100}
-        />
-        <ResultCard
-          label="Mz"
-          description="Z-average mol. weight"
-          value={formatMW(result.mz)}
-          unit="Da"
-          delay={150}
-        />
-        <ResultCard
-          label="Mz+1"
-          description="Z+1 average mol. weight"
-          value={formatMW(result.mz_plus_1)}
-          unit="Da"
-          delay={200}
-        />
-        <ResultCard
-          label="Mv"
-          description="Viscosity-avg mol. weight"
-          value={formatMW(result.mv)}
-          unit="Da"
-          delay={250}
-        />
-        <ResultCard
-          label="Dispersity"
-          description="Distribution breadth (Mw/Mn)"
-          value={result.dispersity.toFixed(3)}
-          delay={300}
-        />
-      </div>
-    </div>
+    </TooltipProvider>
   ) : null;
 }

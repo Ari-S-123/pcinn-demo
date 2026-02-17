@@ -1,0 +1,6 @@
+torch==2.10.0+cpu
+fastapi==0.129.0
+uvicorn[standard]==0.40.0
+pydantic==2.12.5
+pydantic-settings==2.13.0
+numpy==2.4.2

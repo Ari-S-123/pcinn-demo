@@ -1,0 +1,36 @@
+import numpy as np
+
+from app.models.inference import load_model, predict
+
+
+def test_load_model():
+    p = load_model("artifacts/sa_pcinn_fold8_bundle.pt")
+    assert p.model_name == "sa_pcinn"
+    assert p.scalerx_min.shape == (5,)
+    assert p.scalerx_max.shape == (5,)
+    assert p.fold == 8
+    assert p.is_best is True
+
+
+def test_predict_single():
+    p = load_model("artifacts/sa_pcinn_fold8_bundle.pt")
+    result = predict(p, np.array([3.326, 6.674, 0.0246, 333.0, 7200.0]))
+    assert 0.0 <= result["conversion"] <= 1.0
+    assert result["mn"] > 0
+    assert result["mw"] >= result["mn"]
+    assert result["dispersity"] >= 1.0
+    assert len(result["raw_outputs"]) == 6
+
+
+def test_predict_batch():
+    p = load_model("artifacts/sa_pcinn_fold8_bundle.pt")
+    inputs = np.array(
+        [
+            [3.326, 6.674, 0.0246, 333.0, 7200.0],
+            [3.326, 6.674, 0.0246, 333.0, 14400.0],
+        ]
+    )
+    results = predict(p, inputs)
+    assert len(results) == 2
+    # More time should yield more conversion
+    assert results[1]["conversion"] > results[0]["conversion"]

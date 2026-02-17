@@ -1,0 +1,18 @@
+{
+  "name": "pcinn-stack",
+  "private": true,
+  "workspaces": ["apps/web", "packages/*"],
+  "scripts": {
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
+    "dev": "bun run dev:api & bun run dev:web",
+    "build:web": "bun run --cwd apps/web build",
+    "lint": "bun run --cwd apps/web lint",
+    "lint:web": "bun run --cwd apps/web lint",
+    "format": "bun run --cwd apps/web format",
+    "format:check": "bun run --cwd apps/web format:check",
+    "test:api": "cd apps/api && python -m pytest tests/ -v",
+    "docker:build": "docker build -t pcinn-api -f apps/api/Dockerfile .",
+    "docker:run": "docker run -p 8000:8000 pcinn-api"
+  }
+}

@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Build outputs
+.next/
+out/
+dist/
+
+# Environment
+.env
+.env.local
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+*.egg-info/
+
+# Coding Agents
+.claude/
+.codex/
+.cursor/

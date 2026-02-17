@@ -8,7 +8,7 @@
 - Root files (`package.json`, `.env.example`, `docker-compose.yml`, `railway.toml`) manage workspace scripts and deployment config.
 
 ## Build, Test, and Development Commands
-- `bun run dev`: run backend (`:8000`) and frontend (`:3000`) together.
+- Run backend (`:8000`) and frontend (`:3000`) in separate terminals using `bun run dev:api` and `bun run dev:web`.
 - `bun run dev:web`: run Next.js only.
 - `bun run dev:api`: run FastAPI with hot reload.
 - `bun run build:web`: create production frontend build (requires outbound network for `next/font/google` fetches).

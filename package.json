@@ -1,11 +1,17 @@
 {
-  "name": "pcinn-stack",
+  "name": "pcinn-demo",
   "private": true,
-  "workspaces": ["apps/web", "packages/*"],
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "author": "Aritra Saharay",
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "PCINN Demo",
   "scripts": {
     "dev:web": "bun run --cwd apps/web dev",
-    "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
-    "dev": "bun run dev:api & bun run dev:web",
+    "dev:api": "cd apps/api && ./.venv/Scripts/python dev_server.py",
     "build:web": "bun run --cwd apps/web build",
     "lint": "bun run --cwd apps/web lint",
     "lint:web": "bun run --cwd apps/web lint",

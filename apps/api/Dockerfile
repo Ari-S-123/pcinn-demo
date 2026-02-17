@@ -6,8 +6,7 @@ WORKDIR /build
 COPY apps/api/requirements.txt .
 
 RUN pip install --no-cache-dir --prefix=/install \
-    torch==2.10.0+cpu --index-url https://download.pytorch.org/whl/cpu \
- && pip install --no-cache-dir --prefix=/install \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
     -r requirements.txt
 
 # ── Stage 2: Runtime ──────────────────────────────────────────

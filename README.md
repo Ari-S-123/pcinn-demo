@@ -68,10 +68,12 @@ source .venv/bin/activate    # or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 # Optional for running tests:
 pip install -r requirements-dev.txt
-uvicorn app.main:app --reload --port 8000
+python dev_server.py
 ```
 
-The API serves at `http://localhost:8000`. Health check: `GET /api/v1/health`.
+The API tries to start on `http://localhost:8000` by default. If that port is blocked
+or already in use, `dev_server.py` automatically picks the next available port and logs it.
+Health check: `GET /api/v1/health`.
 
 ### Frontend
 
@@ -84,19 +86,24 @@ The frontend serves at `http://localhost:3000`.
 
 `bun run build:web` requires outbound network access to fetch Google Fonts used by `next/font/google`.
 
-### Both (concurrent)
+### Run Both Services
+
+Use two terminals:
 
 ```bash
-bun run dev
+# Terminal 1
+bun run dev:api
+
+# Terminal 2
+bun run dev:web
 ```
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `bun run dev` | Start both API and frontend |
 | `bun run dev:web` | Start Next.js dev server |
-| `bun run dev:api` | Start FastAPI with hot reload |
+| `bun run dev:api` | Start FastAPI with hot reload and automatic port fallback |
 | `bun run build:web` | Production build of frontend |
 | `bun run lint` | ESLint + Prettier check (frontend) |
 | `bun run format` | Format frontend code with Prettier |

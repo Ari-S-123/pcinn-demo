@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PredictionForm } from "@/components/prediction-form";
 import { ComparisonChart } from "@/components/comparison-chart";
@@ -50,7 +50,7 @@ export function CompareClient() {
     };
   }, []);
 
-  const handleCompare = useCallback(async (input: TimeSeriesInput) => {
+  async function handleCompare(input: TimeSeriesInput) {
     const key = JSON.stringify({ endpoint: "compare", input });
 
     // Skip exact duplicate submissions while the same request is still pending.
@@ -88,7 +88,7 @@ export function CompareClient() {
         inFlightRef.current = null;
       }
     }
-  }, []);
+  }
 
   const summaryRows = compareData
     ? MODEL_BADGES.map((modelBadge) => {

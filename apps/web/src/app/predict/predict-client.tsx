@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ModelSelector } from "@/components/model-selector";
 import { PredictionForm } from "@/components/prediction-form";
@@ -9,6 +9,7 @@ import { ReactionChart } from "@/components/reaction-chart";
 import { isAbortError, predict, predictTimeseries } from "@/lib/api-client";
 import type {
   ModelName,
+  ModelInfo,
   PredictionInput,
   PredictionResult,
   TimeSeriesInput,
@@ -20,8 +21,32 @@ interface InFlightRequest {
   controller: AbortController;
 }
 
-export function PredictClient() {
-  const [model, setModel] = useState<ModelName>("sa_pcinn");
+interface PredictClientProps {
+  models: ModelInfo[];
+}
+
+const VALID_MODEL_NAMES: ReadonlySet<ModelName> = new Set(["baseline_nn", "pcinn", "sa_pcinn"]);
+
+function isModelName(value: string): value is ModelName {
+  return VALID_MODEL_NAMES.has(value as ModelName);
+}
+
+function hasKnownModelName(model: ModelInfo): model is ModelInfo & { name: ModelName } {
+  return isModelName(model.name);
+}
+
+function getInitialModel(models: ModelInfo[]): ModelName {
+  if (models.some((item) => item.name === "sa_pcinn")) {
+    return "sa_pcinn";
+  }
+
+  const firstKnownModel = models.find(hasKnownModelName);
+  return firstKnownModel?.name ?? "sa_pcinn";
+}
+
+export function PredictClient({ models }: PredictClientProps) {
+  const selectableModels = models.filter(hasKnownModelName);
+  const [model, setModel] = useState<ModelName>(() => getInitialModel(models));
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [timeseries, setTimeseries] = useState<TimeSeriesResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,63 +65,70 @@ export function PredictClient() {
     setTimeseries(null);
   }, [model]);
 
-  const handlePredict = useCallback(
-    async (input: PredictionInput) => {
-      const tsInput: TimeSeriesInput = {
-        m_molar: input.m_molar,
-        s_molar: input.s_molar,
-        i_molar: input.i_molar,
-        temperature_k: input.temperature_k,
-        time_start_s: 60,
-        time_end_s: input.time_s,
-        time_steps: 100,
-      };
-      const key = JSON.stringify({ endpoint: "predict", model, input });
+  useEffect(() => {
+    const isKnownModel = models.some((item) => hasKnownModelName(item) && item.name === model);
+    if (!isKnownModel) {
+      const fallbackModel = models.find(hasKnownModelName);
+      if (fallbackModel) {
+        setModel(fallbackModel.name);
+      }
+    }
+  }, [model, models]);
 
-      // Skip exact duplicate submissions while the same request is still pending.
-      if (inFlightRef.current?.key === key) {
+  async function handlePredict(input: PredictionInput) {
+    const tsInput: TimeSeriesInput = {
+      m_molar: input.m_molar,
+      s_molar: input.s_molar,
+      i_molar: input.i_molar,
+      temperature_k: input.temperature_k,
+      time_start_s: 60,
+      time_end_s: input.time_s,
+      time_steps: 100,
+    };
+    const key = JSON.stringify({ endpoint: "predict", model, input });
+
+    // Skip exact duplicate submissions while the same request is still pending.
+    if (inFlightRef.current?.key === key) {
+      return;
+    }
+
+    inFlightRef.current?.controller.abort();
+
+    const controller = new AbortController();
+    inFlightRef.current = { key, controller };
+    const requestId = ++requestIdRef.current;
+
+    setIsLoading(true);
+    setResult(null);
+    setTimeseries(null);
+
+    try {
+      // [async-parallel] Fetch point prediction and timeseries simultaneously.
+      const [pointResult, tsResult] = await Promise.all([
+        predict(input, model, { signal: controller.signal }),
+        predictTimeseries(tsInput, model, { signal: controller.signal }),
+      ]);
+
+      if (controller.signal.aborted || requestId !== requestIdRef.current) {
         return;
       }
 
-      inFlightRef.current?.controller.abort();
-
-      const controller = new AbortController();
-      inFlightRef.current = { key, controller };
-      const requestId = ++requestIdRef.current;
-
-      setIsLoading(true);
-      setResult(null);
-      setTimeseries(null);
-
-      try {
-        // [async-parallel] Fetch point prediction and timeseries simultaneously.
-        const [pointResult, tsResult] = await Promise.all([
-          predict(input, model, { signal: controller.signal }),
-          predictTimeseries(tsInput, model, { signal: controller.signal }),
-        ]);
-
-        if (controller.signal.aborted || requestId !== requestIdRef.current) {
-          return;
-        }
-
-        setResult(pointResult);
-        setTimeseries(tsResult);
-      } catch (err) {
-        if (isAbortError(err)) {
-          return;
-        }
-        toast.error(err instanceof Error ? err.message : "Prediction failed");
-      } finally {
-        if (requestId === requestIdRef.current) {
-          setIsLoading(false);
-        }
-        if (inFlightRef.current?.controller === controller) {
-          inFlightRef.current = null;
-        }
+      setResult(pointResult);
+      setTimeseries(tsResult);
+    } catch (err) {
+      if (isAbortError(err)) {
+        return;
       }
-    },
-    [model],
-  );
+      toast.error(err instanceof Error ? err.message : "Prediction failed");
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
+      if (inFlightRef.current?.controller === controller) {
+        inFlightRef.current = null;
+      }
+    }
+  }
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -113,7 +145,7 @@ export function PredictClient() {
       </div>
 
       <div className="mb-6 max-w-xs">
-        <ModelSelector value={model} onChange={setModel} />
+        <ModelSelector value={model} onChange={setModel} models={selectableModels} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">

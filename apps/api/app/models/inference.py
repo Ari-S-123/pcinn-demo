@@ -52,7 +52,8 @@ def predict(predictor: ModelPredictor, raw_inputs: np.ndarray) -> dict | list[di
 
     results = []
     for row in raw_output:
-        conversion = float(row[0])
+        # The model's conversion head is linear; enforce physical bounds at serving.
+        conversion = float(np.clip(row[0], 0.0, 1.0))
         mn = float(10 ** row[1])
         mw = float(10 ** row[2])
         mz = float(10 ** row[3])

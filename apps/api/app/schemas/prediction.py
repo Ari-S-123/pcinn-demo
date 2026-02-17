@@ -14,14 +14,22 @@ class PredictionRequest(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-    conversion: float
-    mn: float
-    mw: float
-    mz: float
-    mz_plus_1: float
-    mv: float
-    dispersity: float
-    raw_outputs: list[float]
+    conversion: float = Field(
+        ..., ge=0.0, le=1.0, description="Served conversion fraction, clipped to [0, 1]."
+    )
+    mn: float = Field(..., description="Number-average molecular weight [Da].")
+    mw: float = Field(..., description="Weight-average molecular weight [Da].")
+    mz: float = Field(..., description="Z-average molecular weight [Da].")
+    mz_plus_1: float = Field(..., description="(z+1)-average molecular weight [Da].")
+    mv: float = Field(..., description="Viscosity-average molecular weight [Da].")
+    dispersity: float = Field(..., description="Molecular weight dispersity (Mw/Mn).")
+    raw_outputs: list[float] = Field(
+        ...,
+        description=(
+            "Unclipped raw model head outputs: [X_raw, log10(Mn), log10(Mw), "
+            "log10(Mz), log10(Mz+1), log10(Mv)]."
+        ),
+    )
 
 
 class BatchPredictionRequest(BaseModel):
@@ -43,24 +51,28 @@ class TimeSeriesRequest(BaseModel):
 
 
 class TimeSeriesData(BaseModel):
-    conversion: list[float]
-    mn: list[float]
-    mw: list[float]
-    mz: list[float]
-    mz_plus_1: list[float]
-    mv: list[float]
-    dispersity: list[float]
+    conversion: list[float] = Field(
+        ..., description="Served conversion series, each point clipped to [0, 1]."
+    )
+    mn: list[float] = Field(..., description="Mn series [Da].")
+    mw: list[float] = Field(..., description="Mw series [Da].")
+    mz: list[float] = Field(..., description="Mz series [Da].")
+    mz_plus_1: list[float] = Field(..., description="Mz+1 series [Da].")
+    mv: list[float] = Field(..., description="Mv series [Da].")
+    dispersity: list[float] = Field(..., description="Dispersity series (Mw/Mn).")
 
 
 class TimeSeriesResponse(BaseModel):
-    times: list[float]
-    conversion: list[float]
-    mn: list[float]
-    mw: list[float]
-    mz: list[float]
-    mz_plus_1: list[float]
-    mv: list[float]
-    dispersity: list[float]
+    times: list[float] = Field(..., description="Time points [s].")
+    conversion: list[float] = Field(
+        ..., description="Served conversion series, each point clipped to [0, 1]."
+    )
+    mn: list[float] = Field(..., description="Mn series [Da].")
+    mw: list[float] = Field(..., description="Mw series [Da].")
+    mz: list[float] = Field(..., description="Mz series [Da].")
+    mz_plus_1: list[float] = Field(..., description="Mz+1 series [Da].")
+    mv: list[float] = Field(..., description="Mv series [Da].")
+    dispersity: list[float] = Field(..., description="Dispersity series (Mw/Mn).")
 
 
 class CompareResponse(BaseModel):

@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileSpreadsheet, Download } from "lucide-react";
-import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { parseUploadFile } from "@/lib/file-parser";
@@ -12,6 +11,15 @@ import type { ParsedRow, RowError } from "@/types/prediction";
 interface UploadZoneProps {
   onFileParsed: (rows: ParsedRow[], errors: RowError[], valid: ParsedRow[]) => void;
   disabled?: boolean;
+}
+
+let xlsxModulePromise: Promise<typeof import("xlsx")> | null = null;
+
+async function getXlsx() {
+  if (!xlsxModulePromise) {
+    xlsxModulePromise = import("xlsx");
+  }
+  return xlsxModulePromise;
 }
 
 function validateRows(rows: ParsedRow[]): { valid: ParsedRow[]; errors: RowError[] } {
@@ -43,7 +51,8 @@ function validateRows(rows: ParsedRow[]): { valid: ParsedRow[]; errors: RowError
   return { valid, errors };
 }
 
-function downloadTemplate() {
+async function downloadTemplate() {
+  const XLSX = await getXlsx();
   const ws = XLSX.utils.aoa_to_sheet([
     ["m_molar", "s_molar", "i_molar", "temperature", "time"],
     [
@@ -170,7 +179,7 @@ export function UploadZone({ onFileParsed, disabled }: UploadZoneProps) {
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            downloadTemplate();
+            void downloadTemplate();
           }}
           className="text-muted-foreground font-mono text-[10px] tracking-wider uppercase"
         >

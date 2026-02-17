@@ -51,6 +51,11 @@ All models share the same architecture: `Input(5) → Linear(128) → tanh → L
 
 Conversion, Mn, Mw, Mz, Mz+1, Mv (molecular weight averages in Da), and Dispersity.
 
+Serving semantics:
+- The deployed `NNmodel` uses a linear 6-output head (`X_raw`, `log10(Mn)`, `log10(Mw)`, `log10(Mz)`, `log10(Mz+1)`, `log10(Mv)`).
+- API `conversion` is post-processed and clipped to the physical range `[0, 1]`.
+- API `raw_outputs` remain unclipped raw model outputs for diagnostics and reproducibility checks.
+
 ## Getting Started
 
 ### Prerequisites
@@ -122,10 +127,10 @@ All endpoints are prefixed with `/api/v1`.
 | `GET` | `/health/ready` | Readiness probe |
 | `GET` | `/models` | List available models |
 | `GET` | `/model/info` | Model details |
-| `POST` | `/predict` | Single-point prediction |
-| `POST` | `/predict/batch` | Batch predictions |
-| `POST` | `/predict/timeseries` | Time-series predictions |
-| `POST` | `/predict/compare` | Compare all 3 models |
+| `POST` | `/predict` | Single-point prediction (`conversion` clipped to `[0,1]`) |
+| `POST` | `/predict/batch` | Batch predictions (`conversion` clipped to `[0,1]`) |
+| `POST` | `/predict/timeseries` | Time-series predictions (`conversion` clipped to `[0,1]`) |
+| `POST` | `/predict/compare` | Compare all 3 models (`conversion` clipped to `[0,1]`) |
 
 ## Environment Variables
 

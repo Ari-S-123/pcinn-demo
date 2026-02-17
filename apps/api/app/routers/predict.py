@@ -147,13 +147,17 @@ async def model_info(request: Request, model: str | None = Query(None)):
         "architecture": "5 -> 128 (tanh) -> 64 (tanh) -> 6 (linear)",
         "input_features": ["[M] mol/L", "[S] mol/L", "[I] mol/L", "T K", "t s"],
         "output_features": [
-            "X",
+            "X_raw",
             "log10(Mn)",
             "log10(Mw)",
             "log10(Mz)",
             "log10(Mz+1)",
             "log10(Mv)",
         ],
+        "served_output_constraints": {
+            "conversion": "clipped to [0, 1]",
+            "raw_outputs[0]": "unclipped X_raw",
+        },
         "scaler_ranges": {
             "M": {
                 "min": float(predictor.scalerx_min[0]),

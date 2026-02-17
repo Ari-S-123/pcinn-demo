@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx";
 import type { ParsedRow } from "@/types/prediction";
 
 const MAX_ROWS = 1000;
@@ -63,6 +62,15 @@ export interface FileParseResult {
   convertedTime: boolean;
 }
 
+let xlsxModulePromise: Promise<typeof import("xlsx")> | null = null;
+
+async function getXlsx() {
+  if (!xlsxModulePromise) {
+    xlsxModulePromise = import("xlsx");
+  }
+  return xlsxModulePromise;
+}
+
 function normalizeHeader(raw: unknown): string {
   return String(raw).trim().toLowerCase();
 }
@@ -78,7 +86,8 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     };
   }
 
-  let workbook: XLSX.WorkBook;
+  const XLSX = await getXlsx();
+  let workbook: import("xlsx").WorkBook;
   try {
     const buffer = await file.arrayBuffer();
     workbook = XLSX.read(buffer, { type: "array" });

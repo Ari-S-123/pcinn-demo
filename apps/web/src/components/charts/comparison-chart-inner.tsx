@@ -32,7 +32,8 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
   if (!data) return null;
 
   const chartData = data.times.map((timeValue, i) => ({
-    time: +(timeValue / 60).toFixed(1),
+    // Keep time numeric so Recharts can use a true number axis with sparse ticks.
+    time: timeValue / 60,
     baseline_nn: +data.baseline_nn.conversion[i].toFixed(4),
     pcinn: +data.pcinn.conversion[i].toFixed(4),
     sa_pcinn: +data.sa_pcinn.conversion[i].toFixed(4),
@@ -69,9 +70,14 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
               <CartesianGrid vertical={true} strokeDasharray="2 6" stroke="var(--border)" />
               <XAxis
                 dataKey="time"
+                type="number"
+                domain={["dataMin", "dataMax"]}
+                tickCount={6}
+                allowDecimals={false}
                 tickLine={{ stroke: "var(--border)" }}
                 axisLine={{ stroke: "var(--border)" }}
                 tickMargin={8}
+                tickFormatter={(v: number) => Number(v).toFixed(0)}
                 tick={{
                   fontSize: 10,
                   fontFamily: "var(--font-mono)",
@@ -88,6 +94,8 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
               />
               <YAxis
                 domain={[0, 1]}
+                allowDataOverflow={true}
+                ticks={[0, 0.25, 0.5, 0.75, 1]}
                 tickLine={{ stroke: "var(--border)" }}
                 axisLine={{ stroke: "var(--border)" }}
                 tick={{
@@ -99,7 +107,9 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
               />
               <ChartTooltip
                 cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
-                content={<ChartTooltipContent labelFormatter={(v) => `t = ${v} min`} />}
+                content={
+                  <ChartTooltipContent labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`} />
+                }
               />
               <ChartLegend
                 verticalAlign="top"
@@ -153,9 +163,14 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
               <CartesianGrid vertical={true} strokeDasharray="2 6" stroke="var(--border)" />
               <XAxis
                 dataKey="time"
+                type="number"
+                domain={["dataMin", "dataMax"]}
+                tickCount={6}
+                allowDecimals={false}
                 tickLine={{ stroke: "var(--border)" }}
                 axisLine={{ stroke: "var(--border)" }}
                 tickMargin={8}
+                tickFormatter={(v: number) => Number(v).toFixed(0)}
                 tick={{
                   fontSize: 10,
                   fontFamily: "var(--font-mono)",
@@ -185,7 +200,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                 cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                 content={
                   <ChartTooltipContent
-                    labelFormatter={(v) => `t = ${v} min`}
+                    labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
                     formatter={(v) => `${Number(v).toLocaleString()} Da`}
                   />
                 }

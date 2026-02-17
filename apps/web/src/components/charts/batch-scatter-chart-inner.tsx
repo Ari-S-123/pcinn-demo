@@ -104,11 +104,14 @@ function ScatterTab({
           cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
           contentStyle={{
             backgroundColor: "var(--popover)",
+            color: "var(--popover-foreground)",
             border: "1px solid var(--border)",
             borderRadius: "6px",
             fontFamily: "var(--font-mono)",
             fontSize: "10px",
           }}
+          labelStyle={{ color: "var(--popover-foreground)" }}
+          itemStyle={{ color: "var(--popover-foreground)" }}
           formatter={(value: number, name: string) => {
             const label = yFormatter ? yFormatter(value) : value.toFixed(4);
             return [label, name];

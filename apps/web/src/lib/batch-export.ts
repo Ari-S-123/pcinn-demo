@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx";
 import type { ModelBatchResult } from "@/types/prediction";
 
 const DISPLAY_NAMES: Record<string, string> = {
@@ -6,6 +5,15 @@ const DISPLAY_NAMES: Record<string, string> = {
   pcinn: "PCINN",
   sa_pcinn: "SA-PCINN",
 };
+
+let xlsxModulePromise: Promise<typeof import("xlsx")> | null = null;
+
+async function getXlsx() {
+  if (!xlsxModulePromise) {
+    xlsxModulePromise = import("xlsx");
+  }
+  return xlsxModulePromise;
+}
 
 function buildSheetData(result: ModelBatchResult) {
   const headers = [
@@ -60,29 +68,41 @@ function buildFilename(results: ModelBatchResult[], extension: string): string {
   return `pcinn-results-${suffix}-${date}.${extension}`;
 }
 
+function buildCsvFilename(model: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  return `pcinn-results-${model}-${date}.csv`;
+}
+
 export function exportResultsAsCsv(results: ModelBatchResult[]) {
-  // For CSV, use the first model's results (or the only model)
-  const result = results[0];
-  const sheetData = buildSheetData(result);
-  const ws = XLSX.utils.aoa_to_sheet(sheetData);
-  const csv = XLSX.utils.sheet_to_csv(ws);
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  triggerDownload(blob, buildFilename(results, "csv"));
+  void (async () => {
+    const XLSX = await getXlsx();
+
+    for (const result of results) {
+      const sheetData = buildSheetData(result);
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+      const csv = XLSX.utils.sheet_to_csv(ws);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      triggerDownload(blob, buildCsvFilename(result.model));
+    }
+  })();
 }
 
 export function exportResultsAsXlsx(results: ModelBatchResult[]) {
-  const wb = XLSX.utils.book_new();
+  void (async () => {
+    const XLSX = await getXlsx();
+    const wb = XLSX.utils.book_new();
 
-  for (const result of results) {
-    const sheetData = buildSheetData(result);
-    const ws = XLSX.utils.aoa_to_sheet(sheetData);
-    const sheetName = DISPLAY_NAMES[result.model] ?? result.model;
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  }
+    for (const result of results) {
+      const sheetData = buildSheetData(result);
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+      const sheetName = DISPLAY_NAMES[result.model] ?? result.model;
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    }
 
-  const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
-  const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-  triggerDownload(blob, buildFilename(results, "xlsx"));
+    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    triggerDownload(blob, buildFilename(results, "xlsx"));
+  })();
 }

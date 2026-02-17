@@ -20,6 +20,7 @@ async def test_predict_valid(client):
     assert "dispersity" in data
     assert "raw_outputs" in data
     assert len(data["raw_outputs"]) == 6
+    assert 0.0 <= data["conversion"] <= 1.0
 
 
 @pytest.mark.asyncio
@@ -50,6 +51,7 @@ async def test_predict_batch(client):
     assert r.status_code == 200
     data = r.json()
     assert len(data["predictions"]) == 2
+    assert all(0.0 <= p["conversion"] <= 1.0 for p in data["predictions"])
 
 
 @pytest.mark.asyncio
@@ -71,6 +73,7 @@ async def test_predict_timeseries(client):
     assert len(data["times"]) == 50
     assert len(data["conversion"]) == 50
     assert len(data["mw"]) == 50
+    assert all(0.0 <= c <= 1.0 for c in data["conversion"])
 
 
 @pytest.mark.asyncio
@@ -93,6 +96,8 @@ async def test_predict_compare(client):
     assert "pcinn" in data
     assert "sa_pcinn" in data
     assert len(data["times"]) == 20
+    for model_name in ("baseline_nn", "pcinn", "sa_pcinn"):
+        assert all(0.0 <= c <= 1.0 for c in data[model_name]["conversion"])
 
 
 @pytest.mark.asyncio
@@ -112,3 +117,4 @@ async def test_model_info(client):
     data = r.json()
     assert data["model_name"] == "sa_pcinn"
     assert "scaler_ranges" in data
+    assert "served_output_constraints" in data

@@ -29,7 +29,12 @@
 - Add tests under `apps/api/tests/` with `test_*.py` filenames and `test_*` function names.
 - Reuse fixtures from `apps/api/tests/conftest.py` for model loading and async clients.
 - Frontend automated tests are not configured yet; include test setup with major UI feature additions.
-- CI currently runs lint checks via `.github/workflows/lint.yml`.
+- CI currently runs lint + backend tests via `.github/workflows/lint_test.yml`.
+
+## Model Output Semantics
+- The deployed predictive network (`apps/api/app/models/nn_model.py`) has a linear 6-output head.
+- API `conversion` is clipped to `[0, 1]` at serving time in `apps/api/app/models/inference.py`.
+- API `raw_outputs` remain unclipped raw head outputs (`raw_outputs[0]` is `X_raw`).
 
 ## Commit & Pull Request Guidelines
 - Current history is minimal (`Initial commit`), so keep commits concise, imperative, and scoped (example: `api: validate model parameter`).

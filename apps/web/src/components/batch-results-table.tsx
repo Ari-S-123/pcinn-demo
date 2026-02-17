@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import type { EnrichedRow, ModelBatchResult, ModelName } from "@/types/prediction";
@@ -61,17 +59,9 @@ function formatCell(key: string, value: number): string {
   }
 }
 
-function VirtualTable({ rows }: { rows: EnrichedRow[] }) {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 32,
-    overscan: 15,
-  });
-
+function BatchTable({ rows }: { rows: EnrichedRow[] }) {
   return (
-    <div ref={parentRef} className="h-[400px] overflow-auto">
+    <div className="h-[400px] overflow-auto">
       <table className="w-full font-mono text-xs">
         <thead className="sticky top-0 z-10 bg-[oklch(0.97_0.002_250)] dark:bg-[oklch(0.13_0.01_260)]">
           <tr className="border-border border-b text-[9px] tracking-[0.12em] text-[var(--color-chrome-muted)] uppercase">
@@ -82,38 +72,19 @@ function VirtualTable({ rows }: { rows: EnrichedRow[] }) {
             ))}
           </tr>
         </thead>
-        <tbody
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-            position: "relative",
-          }}
-        >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const row = rows[virtualRow.index];
-            return (
-              <tr
-                key={virtualRow.index}
-                className="border-border border-b last:border-0"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              >
-                {COLUMNS.map((col) => (
-                  <td
-                    key={col.key}
-                    className={`${col.width} px-2 py-1 text-right tabular-nums first:text-left`}
-                  >
-                    {formatCell(col.key, row[col.key as keyof EnrichedRow] as number)}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
+        <tbody>
+          {rows.map((row, idx) => (
+            <tr key={`${row.rowIndex}-${idx}`} className="border-border border-b last:border-0">
+              {COLUMNS.map((col) => (
+                <td
+                  key={col.key}
+                  className={`${col.width} px-2 py-1 text-right tabular-nums first:text-left`}
+                >
+                  {formatCell(col.key, row[col.key as keyof EnrichedRow] as number)}
+                </td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
@@ -153,12 +124,12 @@ export function BatchResultsTable({ results }: BatchResultsTableProps) {
           </TabsList>
           {results.map((r) => (
             <TabsContent key={r.model} value={r.model}>
-              <VirtualTable rows={r.rows} />
+              <BatchTable rows={r.rows} />
             </TabsContent>
           ))}
         </Tabs>
       ) : (
-        <VirtualTable rows={results[0].rows} />
+        <BatchTable rows={results[0].rows} />
       )}
     </div>
   );

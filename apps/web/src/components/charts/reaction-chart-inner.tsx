@@ -26,7 +26,8 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
   if (!data) return null;
 
   const chartData = data.times.map((timeValue, i) => ({
-    time: +(timeValue / 60).toFixed(1),
+    // Keep time numeric so Recharts can use a true number axis with sparse ticks.
+    time: timeValue / 60,
     conversion: +data.conversion[i].toFixed(4),
     mw: +data.mw[i].toFixed(0),
   }));
@@ -59,9 +60,14 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
               <CartesianGrid vertical={true} strokeDasharray="2 6" stroke="var(--border)" />
               <XAxis
                 dataKey="time"
+                type="number"
+                domain={["dataMin", "dataMax"]}
+                tickCount={6}
+                allowDecimals={false}
                 tickLine={{ stroke: "var(--border)" }}
                 axisLine={{ stroke: "var(--border)" }}
                 tickMargin={8}
+                tickFormatter={(v: number) => Number(v).toFixed(0)}
                 tick={{
                   fontSize: 10,
                   fontFamily: "var(--font-mono)",
@@ -78,6 +84,8 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
               />
               <YAxis
                 domain={[0, 1]}
+                allowDataOverflow={true}
+                ticks={[0, 0.25, 0.5, 0.75, 1]}
                 tickLine={{ stroke: "var(--border)" }}
                 axisLine={{ stroke: "var(--border)" }}
                 tick={{
@@ -89,7 +97,9 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
               />
               <ChartTooltip
                 cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
-                content={<ChartTooltipContent labelFormatter={(v) => `t = ${v} min`} />}
+                content={
+                  <ChartTooltipContent labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`} />
+                }
               />
               <Line
                 dataKey="conversion"
@@ -114,9 +124,14 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
               <CartesianGrid vertical={true} strokeDasharray="2 6" stroke="var(--border)" />
               <XAxis
                 dataKey="time"
+                type="number"
+                domain={["dataMin", "dataMax"]}
+                tickCount={6}
+                allowDecimals={false}
                 tickLine={{ stroke: "var(--border)" }}
                 axisLine={{ stroke: "var(--border)" }}
                 tickMargin={8}
+                tickFormatter={(v: number) => Number(v).toFixed(0)}
                 tick={{
                   fontSize: 10,
                   fontFamily: "var(--font-mono)",
@@ -146,7 +161,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                 cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                 content={
                   <ChartTooltipContent
-                    labelFormatter={(v) => `t = ${v} min`}
+                    labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
                     formatter={(v) => `${Number(v).toLocaleString()} Da`}
                   />
                 }

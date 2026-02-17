@@ -34,3 +34,10 @@ def test_predict_batch():
     assert len(results) == 2
     # More time should yield more conversion
     assert results[1]["conversion"] > results[0]["conversion"]
+
+
+def test_predict_clips_conversion_bounds():
+    p = load_model("artifacts/sa_pcinn_fold8_bundle.pt")
+    result = predict(p, np.array([3.326, 6.674, 0.0246, 333.0, 0.0]))
+    assert 0.0 <= result["conversion"] <= 1.0
+    assert len(result["raw_outputs"]) == 6

@@ -34,6 +34,12 @@ export function PredictClient() {
     };
   }, []);
 
+  // Clear stale results when the selected model changes.
+  useEffect(() => {
+    setResult(null);
+    setTimeseries(null);
+  }, [model]);
+
   const handlePredict = useCallback(
     async (input: PredictionInput) => {
       const tsInput: TimeSeriesInput = {
@@ -95,7 +101,12 @@ export function PredictClient() {
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 space-y-2">
-        <h1 className="font-mono text-2xl font-bold tracking-tighter">Predict</h1>
+        <h1
+          className="font-mono text-2xl font-bold tracking-tighter text-[var(--color-chrome)]"
+          style={{ textShadow: "0 0 12px oklch(0.82 0.08 85 / 15%)" }}
+        >
+          Predict
+        </h1>
         <p className="text-muted-foreground text-sm">
           Single-model prediction of polymer properties from reaction conditions
         </p>

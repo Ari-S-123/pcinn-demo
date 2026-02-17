@@ -5,7 +5,7 @@ const ComparisonChartInner = dynamic(
   () =>
     import("@/components/charts/comparison-chart-inner").then((mod) => mod.ComparisonChartInner),
   {
-    loading: () => <Skeleton className="h-[380px] w-full rounded-lg" />,
+    loading: () => <Skeleton className="h-[440px] w-full rounded-lg" />,
     ssr: false,
   },
 );

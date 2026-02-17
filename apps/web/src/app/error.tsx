@@ -19,7 +19,9 @@ export default function Error({ error, reset }: ErrorPageProps) {
     <div className="container mx-auto max-w-3xl px-4 py-16">
       <Card>
         <CardHeader>
-          <CardTitle className="font-mono text-xl">Something went wrong</CardTitle>
+          <CardTitle className="font-mono text-xl text-[var(--color-chrome)]">
+            Something went wrong
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">

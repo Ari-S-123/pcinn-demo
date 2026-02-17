@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PredictionForm } from "@/components/prediction-form";
 import { ComparisonChart } from "@/components/comparison-chart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { isAbortError, predictCompare } from "@/lib/api-client";
 import type { CompareResult, TimeSeriesInput } from "@/types/prediction";
@@ -13,17 +12,20 @@ const MODEL_BADGES = [
   {
     key: "baseline_nn" as const,
     label: "Baseline NN",
-    className: "bg-green-500/20 text-green-400 border-green-500/30",
+    className:
+      "bg-green-100 text-green-700 border-green-300 dark:bg-green-500/20 dark:text-green-400 dark:border-green-500/30",
   },
   {
     key: "pcinn" as const,
     label: "PCINN",
-    className: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    className:
+      "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30",
   },
   {
     key: "sa_pcinn" as const,
     label: "SA-PCINN",
-    className: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    className:
+      "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30",
   },
 ];
 
@@ -106,7 +108,12 @@ export function CompareClient() {
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 space-y-2">
-        <h1 className="font-mono text-2xl font-bold tracking-tighter">Compare Models</h1>
+        <h1
+          className="font-mono text-2xl font-bold tracking-tighter text-[var(--color-chrome)]"
+          style={{ textShadow: "0 0 12px oklch(0.82 0.08 85 / 15%)" }}
+        >
+          Compare Models
+        </h1>
         <p className="text-muted-foreground text-sm">
           Side-by-side comparison of Baseline NN, PCINN, and SA-PCINN predictions
         </p>
@@ -121,49 +128,59 @@ export function CompareClient() {
           {isLoading || compareData ? <ComparisonChart data={compareData} /> : null}
 
           {summaryRows ? (
-            <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-              <CardHeader className="pb-2">
-                <CardTitle className="font-mono text-sm">Final Predictions (at end time)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left font-mono text-xs">
-                    <thead>
-                      <tr className="text-muted-foreground border-b text-[10px] tracking-wider uppercase">
-                        <th className="pr-4 pb-2">Model</th>
-                        <th className="pr-4 pb-2 text-right">Conversion</th>
-                        <th className="pr-4 pb-2 text-right">Mn (Da)</th>
-                        <th className="pr-4 pb-2 text-right">Mw (Da)</th>
-                        <th className="pb-2 text-right">Dispersity</th>
+            <div className="animate-fade-in-up panel-inset p-5" style={{ animationDelay: "200ms" }}>
+              <h3 className="section-label mb-4 text-[var(--color-chrome-muted)]">
+                Final Predictions (at end time)
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-border border-b text-[9px] tracking-[0.12em] text-[var(--color-chrome-muted)] uppercase">
+                      <th className="pr-4 pb-2">Model</th>
+                      <th className="pr-4 pb-2 text-right" title="Fraction of monomer converted">
+                        Conversion
+                      </th>
+                      <th className="pr-4 pb-2 text-right" title="Number-average molecular weight">
+                        <span>
+                          M<sub>n</sub> (Da)
+                        </span>
+                      </th>
+                      <th className="pr-4 pb-2 text-right" title="Weight-average molecular weight">
+                        <span>
+                          M<sub>w</sub> (Da)
+                        </span>
+                      </th>
+                      <th className="pb-2 text-right" title="Distribution breadth (Mw/Mn)">
+                        Dispersity
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summaryRows.map((row, i) => (
+                      <tr
+                        key={row.key}
+                        className="animate-readout border-border border-b last:border-0"
+                        style={{ animationDelay: `${300 + i * 100}ms` }}
+                      >
+                        <td className="py-2 pr-4">
+                          <Badge variant="outline" className={row.className}>
+                            {row.label}
+                          </Badge>
+                        </td>
+                        <td className="py-2 pr-4 text-right tabular-nums">
+                          {(row.conversion * 100).toFixed(1)}%
+                        </td>
+                        <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mn)}</td>
+                        <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mw)}</td>
+                        <td className="py-2 text-right tabular-nums">
+                          {row.dispersity.toFixed(3)}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {summaryRows.map((row, i) => (
-                        <tr
-                          key={row.key}
-                          className="animate-fade-in-up border-b last:border-0"
-                          style={{ animationDelay: `${300 + i * 100}ms` }}
-                        >
-                          <td className="py-2 pr-4">
-                            <Badge variant="outline" className={row.className}>
-                              {row.label}
-                            </Badge>
-                          </td>
-                          <td className="py-2 pr-4 text-right tabular-nums">
-                            {(row.conversion * 100).toFixed(1)}%
-                          </td>
-                          <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mn)}</td>
-                          <td className="py-2 pr-4 text-right tabular-nums">{formatMW(row.mw)}</td>
-                          <td className="py-2 text-right tabular-nums">
-                            {row.dispersity.toFixed(3)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : null}
         </div>
       </div>

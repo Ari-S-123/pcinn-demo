@@ -1,22 +1,19 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme ? resolvedTheme === "dark" : true;
-  const icon = resolvedTheme ? (isDark ? "☀" : "☾") : "☀";
+  const icon = resolvedTheme ? (isDark ? "\u2600" : "\u263E") : "\u2600";
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="font-mono text-xs"
+      className="text-muted-foreground font-mono text-[10px] tracking-wider uppercase transition-colors hover:text-[var(--color-chrome)]"
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
     >
       <span suppressHydrationWarning>{icon}</span>
-    </Button>
+    </button>
   );
 }

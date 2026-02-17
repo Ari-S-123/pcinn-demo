@@ -155,7 +155,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "border-border/50 bg-background grid min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
+        "border-border bg-popover grid min-w-[13rem] items-start gap-2 rounded-lg border px-3 py-2 font-mono text-xs shadow-lg shadow-black/10 dark:border-[oklch(0.35_0.01_260)] dark:bg-[oklch(0.15_0.01_260)] dark:shadow-black/30",
         className,
       )}
     >
@@ -166,7 +166,7 @@ function ChartTooltipContent({
           .map((item, index) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            const indicatorColor = color || item.payload.fill || item.color;
+            const indicatorColor = color || itemConfig?.color || item.payload.fill || item.color;
 
             return (
               <div

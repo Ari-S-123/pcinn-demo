@@ -14,9 +14,12 @@ import { getModels } from "@/lib/api-client";
 import type { ModelInfo, ModelName } from "@/types/prediction";
 
 const MODEL_COLORS: Record<string, string> = {
-  baseline_nn: "bg-green-500/20 text-green-400 border-green-500/30",
-  pcinn: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  sa_pcinn: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  baseline_nn:
+    "bg-green-100 text-green-700 border-green-300 dark:bg-green-500/20 dark:text-green-400 dark:border-green-500/30",
+  pcinn:
+    "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30",
+  sa_pcinn:
+    "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30",
 };
 
 interface ModelSelectorProps {
@@ -38,7 +41,7 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
     <Skeleton className="h-9 w-full" />
   ) : (
     <Select value={value} onValueChange={(v) => onChange(v as ModelName)}>
-      <SelectTrigger className="w-full font-mono text-xs">
+      <SelectTrigger className="border-border bg-muted w-full font-mono text-xs dark:border-[oklch(0.28_0.012_260)] dark:bg-[oklch(0.14_0.01_260)]">
         <SelectValue placeholder="Select model..." />
       </SelectTrigger>
       <SelectContent>

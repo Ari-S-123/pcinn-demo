@@ -7,7 +7,9 @@ export default function NotFound() {
     <div className="container mx-auto max-w-3xl px-4 py-16">
       <Card>
         <CardHeader>
-          <CardTitle className="font-mono text-xl">Page not found</CardTitle>
+          <CardTitle className="font-mono text-xl text-[var(--color-chrome)]">
+            Page not found
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">

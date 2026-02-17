@@ -5,9 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   predictionSchema,
   defaultFormValues,
@@ -44,7 +42,7 @@ const FIELDS = [
   {
     name: "temperature_c" as const,
     label: "Temperature",
-    unit: "°C",
+    unit: "\u00b0C",
     min: 50,
     max: 90,
     step: 1,
@@ -89,76 +87,73 @@ export function PredictionForm({ onPredict, onCompare, isLoading }: PredictionFo
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="font-mono text-sm">Reaction Conditions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-5">
-          {FIELDS.map((field) => (
-            <Controller
-              key={field.name}
-              name={field.name}
-              control={control}
-              render={({ field: { value, onChange }, fieldState: { error } }) => (
-                <div className="space-y-2">
-                  <div className="flex items-baseline justify-between">
-                    <Label className="font-mono text-xs">
-                      {field.label} <span className="text-muted-foreground">({field.unit})</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      value={value}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        if (!isNaN(v)) onChange(v);
-                      }}
-                      min={field.min}
-                      max={field.max}
-                      step={field.step}
-                      className="h-7 w-24 font-mono text-xs"
-                    />
-                  </div>
-                  <Slider
-                    value={[value]}
-                    onValueChange={([v]) => onChange(v)}
+    <div className="panel-inset p-5">
+      <h2 className="section-label mb-5 text-[var(--color-chrome-muted)]">Reaction Conditions</h2>
+      <form className="space-y-5">
+        {FIELDS.map((field) => (
+          <Controller
+            key={field.name}
+            name={field.name}
+            control={control}
+            render={({ field: { value, onChange }, fieldState: { error } }) => (
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <Label className="font-mono text-[11px] tracking-wide">
+                    {field.label}{" "}
+                    <span className="text-[var(--color-chrome-muted)]">({field.unit})</span>
+                  </Label>
+                  <Input
+                    type="number"
+                    value={value}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      if (!isNaN(v)) onChange(v);
+                    }}
                     min={field.min}
                     max={field.max}
                     step={field.step}
+                    className="bg-muted h-7 w-24 text-right font-mono text-xs tabular-nums dark:bg-[oklch(0.10_0.012_260)]"
                   />
-                  {error ? <p className="text-xs text-red-400">{error.message}</p> : null}
                 </div>
-              )}
-            />
-          ))}
+                <Slider
+                  value={[value]}
+                  onValueChange={([v]) => onChange(v)}
+                  min={field.min}
+                  max={field.max}
+                  step={field.step}
+                />
+                {error ? <p className="text-xs text-red-400">{error.message}</p> : null}
+              </div>
+            )}
+          />
+        ))}
 
-          <Separator />
+        <div className="rule-line my-4" />
 
-          <div className="flex flex-col gap-2 pt-1">
-            {onPredict ? (
-              <Button
-                type="button"
-                onClick={handleSubmit(onSubmitPredict)}
-                disabled={isLoading}
-                className="font-mono text-xs"
-              >
-                {isLoading ? "Predicting..." : "Predict"}
-              </Button>
-            ) : null}
-            {onCompare ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleSubmit(onSubmitCompare)}
-                disabled={isLoading}
-                className="font-mono text-xs"
-              >
-                {isLoading ? "Comparing..." : "Compare All Models"}
-              </Button>
-            ) : null}
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        <div className="flex flex-col gap-2 pt-1">
+          {onPredict ? (
+            <Button
+              type="button"
+              onClick={handleSubmit(onSubmitPredict)}
+              disabled={isLoading}
+              className="font-mono text-xs tracking-wider uppercase"
+            >
+              {isLoading ? "Predicting..." : "Predict"}
+            </Button>
+          ) : null}
+          {onCompare ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSubmit(onSubmitCompare)}
+              disabled={isLoading}
+              className="border-[var(--color-chrome)]/40 font-mono text-xs tracking-wider text-[var(--color-chrome)] uppercase hover:bg-[var(--color-chrome)]/10"
+            >
+              {isLoading ? "Comparing..." : "Compare All Models"}
+            </Button>
+          ) : null}
+        </div>
+      </form>
+    </div>
   );
 }

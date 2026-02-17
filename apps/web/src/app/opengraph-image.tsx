@@ -17,7 +17,7 @@ export default function OpenGraphImage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        background: "linear-gradient(135deg, #020617 0%, #0f172a 55%, #1e293b 100%)",
+        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 55%, #0f3460 100%)",
         color: "#f8fafc",
         padding: "64px 72px",
         fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif",
@@ -30,7 +30,7 @@ export default function OpenGraphImage() {
           fontSize: 28,
           letterSpacing: 2,
           textTransform: "uppercase",
-          opacity: 0.9,
+          color: "#d4a053",
         }}
       >
         {siteConfig.name}

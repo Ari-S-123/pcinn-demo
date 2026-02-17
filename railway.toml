@@ -1,3 +1,6 @@
+[build]
+dockerfilePath = "apps/api/Dockerfile"
+
 [deploy]
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 300

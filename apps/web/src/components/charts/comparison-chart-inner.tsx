@@ -177,9 +177,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                 <ChartTooltip
                   cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                   content={
-                    <ChartTooltipContent
-                      labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`}
-                    />
+                    <ChartTooltipContent labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`} />
                   }
                 />
                 <ChartLegend

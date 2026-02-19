@@ -7,8 +7,7 @@ export const inputFieldDescriptions = {
     "Initial initiator concentration. Controls radical generation rate and influences chain population.",
   temperature_k:
     "Reaction temperature in Kelvin. Higher temperature generally accelerates reaction kinetics.",
-  time_s:
-    "Elapsed reaction time in seconds used for single-point prediction and compare horizon.",
+  time_s: "Elapsed reaction time in seconds used for single-point prediction and compare horizon.",
 } as const;
 
 export const outputFieldDescriptions = {

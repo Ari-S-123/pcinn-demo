@@ -204,7 +204,7 @@ export function BatchScatterChartInner({ results }: BatchScatterChartInnerProps)
               <span className="inline-flex items-center gap-1.5">
                 <span>Conversion vs Time</span>
                 <InfoTooltip
-                  content={`${outputFieldDescriptions.conversion} X-axis: ${inputFieldDescriptions.time_min}`}
+                  content={`${outputFieldDescriptions.conversion} X-axis: ${inputFieldDescriptions.time_s}`}
                 />
               </span>
             </TabsTrigger>
@@ -236,9 +236,9 @@ export function BatchScatterChartInner({ results }: BatchScatterChartInnerProps)
             <ScatterTab
               results={results}
               config={config}
-              xKey="time_min"
+              xKey="time_s"
               yKey="conversion"
-              xLabel="Time (min)"
+              xLabel="Time (s)"
               yLabel="Conversion"
               yDomain={[0, 1]}
             />

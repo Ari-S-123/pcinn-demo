@@ -65,8 +65,8 @@ export function UploadClient({ models }: UploadClientProps) {
         m_molar: r.m_molar,
         s_molar: r.s_molar,
         i_molar: r.i_molar,
-        temperature_c: r.temperature_c,
-        time_min: r.time_min,
+        temperature_k: r.temperature_k,
+        time_s: r.time_s,
       }),
     );
 
@@ -88,8 +88,8 @@ export function UploadClient({ models }: UploadClientProps) {
             m_molar: row.m_molar,
             s_molar: row.s_molar,
             i_molar: row.i_molar,
-            temperature_c: row.temperature_c,
-            time_min: row.time_min,
+            temperature_k: row.temperature_k,
+            time_s: row.time_s,
             conversion: responses[i].predictions[j].conversion,
             mn: responses[i].predictions[j].mn,
             mw: responses[i].predictions[j].mw,

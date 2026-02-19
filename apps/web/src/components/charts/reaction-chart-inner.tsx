@@ -49,7 +49,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
 
   const chartData = data.times.map((timeValue, i) => ({
     // Keep time numeric so Recharts can use a true number axis with sparse ticks.
-    time: timeValue / 60,
+    time: timeValue,
     conversion: +data.conversion[i].toFixed(4),
     mn: +data.mn[i].toFixed(0),
     mw: +data.mw[i].toFixed(0),
@@ -110,7 +110,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                     fill: "var(--muted-foreground)",
                   }}
                   label={{
-                    value: "Time (min)",
+                    value: "Time (s)",
                     position: "insideBottom",
                     offset: -4,
                     fontSize: 10,
@@ -135,7 +135,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                   cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                   content={
                     <ChartTooltipContent
-                      labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
+                      labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`}
                     />
                   }
                 />
@@ -177,7 +177,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                       fill: "var(--muted-foreground)",
                     }}
                     label={{
-                      value: "Time (min)",
+                      value: "Time (s)",
                       position: "insideBottom",
                       offset: -4,
                       fontSize: 10,
@@ -200,7 +200,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                     cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                     content={
                       <ChartTooltipContent
-                        labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
+                        labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`}
                         formatter={(v) => `${Number(v).toLocaleString()} Da`}
                       />
                     }

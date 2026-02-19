@@ -31,8 +31,8 @@ function validateRows(rows: ParsedRow[]): { valid: ParsedRow[]; errors: RowError
       m_molar: row.m_molar,
       s_molar: row.s_molar,
       i_molar: row.i_molar,
-      temperature_c: row.temperature_c,
-      time_min: row.time_min,
+      temperature_k: row.temperature_k,
+      time_s: row.time_s,
     });
 
     if (result.success) {
@@ -54,16 +54,16 @@ function validateRows(rows: ParsedRow[]): { valid: ParsedRow[]; errors: RowError
 async function downloadTemplate() {
   const XLSX = await getXlsx();
   const ws = XLSX.utils.aoa_to_sheet([
-    ["m_molar", "s_molar", "i_molar", "temperature", "time"],
+    ["m_molar", "s_molar", "i_molar", "temperature_k", "time_s"],
     [
       defaultFormValues.m_molar,
       defaultFormValues.s_molar,
       defaultFormValues.i_molar,
-      defaultFormValues.temperature_c,
-      defaultFormValues.time_min,
+      defaultFormValues.temperature_k,
+      defaultFormValues.time_s,
     ],
-    [2.0, 7.5, 0.05, 70, 240],
-    [4.0, 6.0, 0.01, 80, 60],
+    [2.0, 7.5, 0.05, 343.15, 14400],
+    [4.0, 6.0, 0.01, 353.15, 3600],
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Template");
@@ -90,8 +90,8 @@ export function UploadZone({ onFileParsed, disabled }: UploadZoneProps) {
 
     // Notify user about auto-detected unit conversions
     const conversions: string[] = [];
-    if (convertedTemperature) conversions.push("K \u2192 \u00b0C");
-    if (convertedTime) conversions.push("s \u2192 min");
+    if (convertedTemperature) conversions.push("\u00b0C \u2192 K");
+    if (convertedTime) conversions.push("min \u2192 s");
     if (conversions.length > 0) {
       toast.info(`Auto-converted units: ${conversions.join(", ")}`);
     }

@@ -4,11 +4,6 @@ const MAX_ROWS = 1000;
 
 type CanonicalField = keyof Omit<ParsedRow, "rowIndex">;
 
-// Headers that explicitly indicate Kelvin or seconds
-const KELVIN_HEADERS = new Set(["temperature_k", "temp_k", "temp (k)", "temperature (k)"]);
-
-const SECONDS_HEADERS = new Set(["time_s", "time (s)", "time (sec)", "time (seconds)"]);
-
 const HEADER_MAP: Record<string, CanonicalField> = {
   // Concentration fields (no unit ambiguity)
   m_molar: "m_molar",
@@ -23,42 +18,51 @@ const HEADER_MAP: Record<string, CanonicalField> = {
   "[i]": "i_molar",
   i: "i_molar",
   initiator: "i_molar",
-  // Temperature — could be °C or K
-  temperature: "temperature_c",
-  temperature_c: "temperature_c",
-  temp: "temperature_c",
-  "temp (°c)": "temperature_c",
-  "temperature (°c)": "temperature_c",
-  "temperature (c)": "temperature_c",
-  temperature_k: "temperature_c",
-  temp_k: "temperature_c",
-  "temp (k)": "temperature_c",
-  "temperature (k)": "temperature_c",
-  // Time — could be minutes or seconds
-  time: "time_min",
-  time_min: "time_min",
-  "time (min)": "time_min",
-  "time (minutes)": "time_min",
-  time_s: "time_min",
-  "time (s)": "time_min",
-  "time (sec)": "time_min",
-  "time (seconds)": "time_min",
+  // Temperature — all mapped to K
+  temperature: "temperature_k",
+  temperature_k: "temperature_k",
+  temp: "temperature_k",
+  temperature_c: "temperature_k",
+  "temp (°c)": "temperature_k",
+  "temperature (°c)": "temperature_k",
+  "temperature (c)": "temperature_k",
+  temp_k: "temperature_k",
+  "temp (k)": "temperature_k",
+  "temperature (k)": "temperature_k",
+  // Time — all mapped to s
+  time: "time_s",
+  time_s: "time_s",
+  "time (s)": "time_s",
+  "time (sec)": "time_s",
+  "time (seconds)": "time_s",
+  time_min: "time_s",
+  "time (min)": "time_s",
+  "time (minutes)": "time_s",
 };
+
+// Headers that explicitly indicate Celsius or minutes (need conversion to K / s)
+const CELSIUS_HEADERS = new Set([
+  "temperature_c",
+  "temp (°c)",
+  "temperature (°c)",
+  "temperature (c)",
+]);
+const MINUTES_HEADERS = new Set(["time_min", "time (min)", "time (minutes)"]);
 
 const REQUIRED_FIELDS: CanonicalField[] = [
   "m_molar",
   "s_molar",
   "i_molar",
-  "temperature_c",
-  "time_min",
+  "temperature_k",
+  "time_s",
 ];
 
 export interface FileParseResult {
   rows: ParsedRow[];
   error: string | null;
-  /** Whether temperature was auto-detected as Kelvin and converted */
+  /** Whether temperature was auto-detected as Celsius and converted to K */
   convertedTemperature: boolean;
-  /** Whether time was auto-detected as seconds and converted */
+  /** Whether time was auto-detected as minutes and converted to s */
   convertedTime: boolean;
 }
 
@@ -127,9 +131,9 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   const normalizedHeaders = headerRow.map(normalizeHeader);
   const columnMap: (CanonicalField | null)[] = normalizedHeaders.map((h) => HEADER_MAP[h] ?? null);
 
-  // Detect if the header explicitly indicates Kelvin or seconds
-  const hasExplicitKelvin = normalizedHeaders.some((h) => KELVIN_HEADERS.has(h));
-  const hasExplicitSeconds = normalizedHeaders.some((h) => SECONDS_HEADERS.has(h));
+  // Detect if the header explicitly indicates Celsius or minutes
+  const hasExplicitCelsius = normalizedHeaders.some((h) => CELSIUS_HEADERS.has(h));
+  const hasExplicitMinutes = normalizedHeaders.some((h) => MINUTES_HEADERS.has(h));
 
   // Check that all required fields are present
   const foundFields = new Set(columnMap.filter((f): f is CanonicalField => f !== null));
@@ -138,7 +142,7 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   if (missingFields.length > 0) {
     return {
       rows: [],
-      error: `Missing required columns: ${missingFields.join(", ")}. Expected headers like: m_molar (or [M]), s_molar (or [S]), i_molar (or [I]), temperature (°C or K), time (min or s).`,
+      error: `Missing required columns: ${missingFields.join(", ")}. Expected headers like: m_molar (or [M]), s_molar (or [S]), i_molar (or [I]), temperature (K or °C), time (s or min).`,
       convertedTemperature: false,
       convertedTime: false,
     };
@@ -182,16 +186,16 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
       row.m_molar !== undefined &&
       row.s_molar !== undefined &&
       row.i_molar !== undefined &&
-      row.temperature_c !== undefined &&
-      row.time_min !== undefined
+      row.temperature_k !== undefined &&
+      row.time_s !== undefined
     ) {
       rows.push({
         rowIndex: i + 2, // 1-based, +1 for header row
         m_molar: row.m_molar,
         s_molar: row.s_molar,
         i_molar: row.i_molar,
-        temperature_c: row.temperature_c,
-        time_min: row.time_min,
+        temperature_k: row.temperature_k,
+        time_s: row.time_s,
       });
     }
   }
@@ -206,24 +210,24 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   }
 
   // Auto-detect and convert units
-  // Temperature: if header explicitly says K, or all values > 200, treat as Kelvin
-  const tempValues = rows.map((r) => r.temperature_c);
-  const isKelvin = hasExplicitKelvin || tempValues.every((t) => t > 200);
-  if (isKelvin) {
+  // Temperature: if header explicitly says °C, or all values < 200, treat as Celsius and convert to K
+  const tempValues = rows.map((r) => r.temperature_k);
+  const isCelsius = hasExplicitCelsius || tempValues.every((t) => t < 200);
+  if (isCelsius) {
     for (const row of rows) {
-      row.temperature_c = row.temperature_c - 273.15;
+      row.temperature_k = row.temperature_k + 273.15;
     }
   }
 
-  // Time: if header explicitly says seconds, or max value exceeds the minutes max (597.57), treat as seconds
-  const timeValues = rows.map((r) => r.time_min);
+  // Time: if header explicitly says minutes, or max value < 597.57 and no explicit seconds header, treat as minutes
+  const timeValues = rows.map((r) => r.time_s);
   const maxTime = Math.max(...timeValues);
-  const isSeconds = hasExplicitSeconds || maxTime > 597.57;
-  if (isSeconds) {
+  const isMinutes = hasExplicitMinutes || maxTime <= 597.57;
+  if (isMinutes) {
     for (const row of rows) {
-      row.time_min = row.time_min / 60;
+      row.time_s = row.time_s * 60;
     }
   }
 
-  return { rows, error: null, convertedTemperature: isKelvin, convertedTime: isSeconds };
+  return { rows, error: null, convertedTemperature: isCelsius, convertedTime: isMinutes };
 }

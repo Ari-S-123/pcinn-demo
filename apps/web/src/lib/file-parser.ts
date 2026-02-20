@@ -152,6 +152,16 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     };
   }
 
+  if (hasExplicitMinutes && hasExplicitSeconds) {
+    return {
+      rows: [],
+      error:
+        "Conflicting time headers detected. Use either seconds (time_s/time (s)) or minutes (time_min/time (min)), not both.",
+      convertedTemperature: false,
+      convertedTime: false,
+    };
+  }
+
   // Parse data rows
   const dataRows = rawData.slice(1);
 

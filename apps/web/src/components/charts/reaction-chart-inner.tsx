@@ -40,6 +40,13 @@ const mwConfigs: Record<MwMetric, ChartConfig> = {
   mv: { mv: { label: "Mv (Da)", color: "#fb923c" } },
 };
 
+function formatTimeSeconds(value: number | string): string {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return String(value);
+  if (Number.isInteger(numeric)) return numeric.toLocaleString("en-US");
+  return numeric.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
 interface ReactionChartInnerProps {
   data: TimeSeriesResult | null;
 }
@@ -134,7 +141,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                 <ChartTooltip
                   cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                   content={
-                    <ChartTooltipContent labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`} />
+                    <ChartTooltipContent labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`} />
                   }
                 />
                 <Line
@@ -198,7 +205,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                     cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                     content={
                       <ChartTooltipContent
-                        labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`}
+                        labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`}
                         formatter={(v) => `${Number(v).toLocaleString()} Da`}
                       />
                     }

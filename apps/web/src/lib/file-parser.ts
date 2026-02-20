@@ -47,7 +47,10 @@ const CELSIUS_HEADERS = new Set([
   "temperature (°c)",
   "temperature (c)",
 ]);
+const SECONDS_HEADERS = new Set(["time_s", "time (s)", "time (sec)", "time (seconds)"]);
 const MINUTES_HEADERS = new Set(["time_min", "time (min)", "time (minutes)"]);
+// Legacy minute-based uploads max out near 35,854 s / 60 = 597.57 min.
+const MINUTES_HEURISTIC_MAX_SECONDS = 597.57;
 
 const REQUIRED_FIELDS: CanonicalField[] = [
   "m_molar",
@@ -131,8 +134,9 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   const normalizedHeaders = headerRow.map(normalizeHeader);
   const columnMap: (CanonicalField | null)[] = normalizedHeaders.map((h) => HEADER_MAP[h] ?? null);
 
-  // Detect if the header explicitly indicates Celsius or minutes
+  // Detect if the header explicitly indicates Celsius, seconds, or minutes
   const hasExplicitCelsius = normalizedHeaders.some((h) => CELSIUS_HEADERS.has(h));
+  const hasExplicitSeconds = normalizedHeaders.some((h) => SECONDS_HEADERS.has(h));
   const hasExplicitMinutes = normalizedHeaders.some((h) => MINUTES_HEADERS.has(h));
 
   // Check that all required fields are present
@@ -219,15 +223,23 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     }
   }
 
-  // Time: if header explicitly says minutes, or max value < 597.57 and no explicit seconds header, treat as minutes
+  // Time: treat as minutes only for explicit minute headers, or when no explicit seconds header is present
+  // and values look minute-like by legacy heuristic.
   const timeValues = rows.map((r) => r.time_s);
   const maxTime = Math.max(...timeValues);
-  const isMinutes = hasExplicitMinutes || maxTime <= 597.57;
-  if (isMinutes) {
+  const isMinutes =
+    hasExplicitMinutes || (!hasExplicitSeconds && maxTime <= MINUTES_HEURISTIC_MAX_SECONDS);
+  const shouldConvertMinutes = isMinutes && !hasExplicitSeconds;
+  if (shouldConvertMinutes) {
     for (const row of rows) {
       row.time_s = row.time_s * 60;
     }
   }
 
-  return { rows, error: null, convertedTemperature: isCelsius, convertedTime: isMinutes };
+  return {
+    rows,
+    error: null,
+    convertedTemperature: isCelsius,
+    convertedTime: shouldConvertMinutes,
+  };
 }

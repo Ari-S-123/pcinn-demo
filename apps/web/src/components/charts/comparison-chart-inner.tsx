@@ -71,6 +71,13 @@ const metricConfigs: Record<MwMetric, ChartConfig> = {
   },
 };
 
+function formatTimeSeconds(value: number | string): string {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return String(value);
+  if (Number.isInteger(numeric)) return numeric.toLocaleString("en-US");
+  return numeric.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
 interface ComparisonChartInnerProps {
   data: CompareResult | null;
 }
@@ -177,7 +184,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                 <ChartTooltip
                   cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                   content={
-                    <ChartTooltipContent labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`} />
+                    <ChartTooltipContent labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`} />
                   }
                 />
                 <ChartLegend
@@ -250,7 +257,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                     cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                     content={
                       <ChartTooltipContent
-                        labelFormatter={(v) => `t = ${Number(v).toFixed(0)} s`}
+                        labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`}
                         formatter={(v) => `${Number(v).toLocaleString()} Da`}
                       />
                     }

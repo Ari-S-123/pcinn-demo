@@ -48,7 +48,7 @@ const FIELDS = [
     unit: "K",
     min: 323,
     max: 363,
-    step: 1,
+    step: 0.01,
   },
   {
     name: "time_s" as const,
@@ -56,7 +56,7 @@ const FIELDS = [
     unit: "s",
     min: 1.2,
     max: 35854,
-    step: 1,
+    step: 0.1,
   },
 ];
 

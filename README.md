@@ -24,7 +24,7 @@ pcinn-demo/
 - Browser requests call FastAPI directly through `apps/web/src/lib/api-client.ts`.
 - Prediction requests run in parallel where possible and support cancellation to avoid stale UI state.
 - Route-level resilience/metadata files are enabled (`loading.tsx`, `error.tsx`, `not-found.tsx`, `robots.ts`, `sitemap.ts`, `opengraph-image.tsx`).
-- Frontend canonical units are Kelvin (`temperature_k`) and seconds (`time_s`), with legacy upload files in °C/min auto-normalized to K/s.
+- Frontend canonical units are Kelvin (`temperature_k`) and seconds (`time_s`); batch uploads require explicit `temperature_k` and `time_s` headers (no auto-conversion), with canonical columns `m_molar`, `s_molar`, `i_molar`, `temperature_k`, `time_s`.
 
 ## Models
 

@@ -69,7 +69,7 @@ Request validation uses Pydantic with domain bounds (e.g., `m_molar: 0.5-5.0`, `
 
 The frontend uses API-native units directly: Kelvin (`temperature_k`) and seconds (`time_s`).
 `src/lib/validation.ts` validates K/s ranges and `toApiUnits()` is a pass-through mapping.
-`src/lib/file-parser.ts` preserves backward compatibility for uploads by accepting legacy °C/min headers and auto-converting them to K/s; explicit seconds headers prevent minute conversion.
+`src/lib/file-parser.ts` requires explicit Kelvin/seconds upload headers (`temperature_k`, `time_s`); legacy/ambiguous temperature/time headers are rejected and no unit auto-conversion is performed.
 
 ### Frontend: Key Patterns
 

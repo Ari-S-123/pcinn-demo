@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileSpreadsheet, Download } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { parseUploadFile } from "@/lib/file-parser";
 import { predictionSchema, defaultFormValues } from "@/lib/validation";
@@ -80,20 +79,12 @@ export function UploadZone({ onFileParsed, disabled }: UploadZoneProps) {
     setIsParsing(true);
     setParseError(null);
 
-    const { rows, error, convertedTemperature, convertedTime } = await parseUploadFile(file);
+    const { rows, error } = await parseUploadFile(file);
 
     if (error) {
       setParseError(error);
       setIsParsing(false);
       return;
-    }
-
-    // Notify user about auto-detected unit conversions
-    const conversions: string[] = [];
-    if (convertedTemperature) conversions.push("\u00b0C \u2192 K");
-    if (convertedTime) conversions.push("min \u2192 s");
-    if (conversions.length > 0) {
-      toast.info(`Auto-converted units: ${conversions.join(", ")}`);
     }
 
     const { valid, errors } = validateRows(rows);
@@ -160,7 +151,9 @@ export function UploadZone({ onFileParsed, disabled }: UploadZoneProps) {
                 Drop a file here or click to browse
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
-                Accepts .csv and .xlsx files (max 1,000 rows). Units auto-detected.
+                Accepts .csv and .xlsx files (max 1,000 rows). Use headers m_molar, s_molar,
+                i_molar, temperature_k, time_s. Temperature/time must be exactly temperature_k and
+                time_s.
               </p>
             </div>
           </>

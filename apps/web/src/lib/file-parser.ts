@@ -5,7 +5,6 @@ const MAX_ROWS = 1000;
 type CanonicalField = keyof Omit<ParsedRow, "rowIndex">;
 
 const HEADER_MAP: Record<string, CanonicalField> = {
-  // Concentration fields (no unit ambiguity)
   m_molar: "m_molar",
   "[m]": "m_molar",
   m: "m_molar",
@@ -18,38 +17,9 @@ const HEADER_MAP: Record<string, CanonicalField> = {
   "[i]": "i_molar",
   i: "i_molar",
   initiator: "i_molar",
-  // Temperature — all mapped to K
-  temperature: "temperature_k",
   temperature_k: "temperature_k",
-  temp: "temperature_k",
-  temperature_c: "temperature_k",
-  "temp (°c)": "temperature_k",
-  "temperature (°c)": "temperature_k",
-  "temperature (c)": "temperature_k",
-  temp_k: "temperature_k",
-  "temp (k)": "temperature_k",
-  "temperature (k)": "temperature_k",
-  // Time — all mapped to s
-  time: "time_s",
   time_s: "time_s",
-  "time (s)": "time_s",
-  "time (sec)": "time_s",
-  "time (seconds)": "time_s",
-  time_min: "time_s",
-  "time (min)": "time_s",
-  "time (minutes)": "time_s",
 };
-
-// Headers that explicitly indicate Celsius, Kelvin, seconds, or minutes.
-const CELSIUS_HEADERS = new Set([
-  "temperature_c",
-  "temp (°c)",
-  "temperature (°c)",
-  "temperature (c)",
-]);
-const KELVIN_HEADERS = new Set(["temperature_k", "temp_k", "temp (k)", "temperature (k)"]);
-const SECONDS_HEADERS = new Set(["time_s", "time (s)", "time (sec)", "time (seconds)"]);
-const MINUTES_HEADERS = new Set(["time_min", "time (min)", "time (minutes)"]);
 
 const REQUIRED_FIELDS: CanonicalField[] = [
   "m_molar",
@@ -62,10 +32,6 @@ const REQUIRED_FIELDS: CanonicalField[] = [
 export interface FileParseResult {
   rows: ParsedRow[];
   error: string | null;
-  /** Whether temperature was auto-detected as Celsius and converted to K */
-  convertedTemperature: boolean;
-  /** Whether time was converted from minutes to seconds */
-  convertedTime: boolean;
 }
 
 let xlsxModulePromise: Promise<typeof import("xlsx")> | null = null;
@@ -87,8 +53,6 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     return {
       rows: [],
       error: "Unsupported file type. Please upload a .csv or .xlsx file.",
-      convertedTemperature: false,
-      convertedTime: false,
     };
   }
 
@@ -101,8 +65,6 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     return {
       rows: [],
       error: "Could not read file. Make sure it is a valid .csv or .xlsx file.",
-      convertedTemperature: false,
-      convertedTime: false,
     };
   }
 
@@ -111,8 +73,6 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     return {
       rows: [],
       error: "File contains no sheets.",
-      convertedTemperature: false,
-      convertedTime: false,
     };
   }
 
@@ -123,8 +83,6 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     return {
       rows: [],
       error: "File must contain a header row and at least one data row.",
-      convertedTemperature: false,
-      convertedTime: false,
     };
   }
 
@@ -133,12 +91,6 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   const normalizedHeaders = headerRow.map(normalizeHeader);
   const columnMap: (CanonicalField | null)[] = normalizedHeaders.map((h) => HEADER_MAP[h] ?? null);
 
-  // Detect if the header explicitly indicates Celsius, Kelvin, seconds, or minutes
-  const hasExplicitCelsius = normalizedHeaders.some((h) => CELSIUS_HEADERS.has(h));
-  const hasExplicitKelvin = normalizedHeaders.some((h) => KELVIN_HEADERS.has(h));
-  const hasExplicitSeconds = normalizedHeaders.some((h) => SECONDS_HEADERS.has(h));
-  const hasExplicitMinutes = normalizedHeaders.some((h) => MINUTES_HEADERS.has(h));
-
   // Check that all required fields are present
   const foundFields = new Set(columnMap.filter((f): f is CanonicalField => f !== null));
   const missingFields = REQUIRED_FIELDS.filter((f) => !foundFields.has(f));
@@ -146,19 +98,7 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   if (missingFields.length > 0) {
     return {
       rows: [],
-      error: `Missing required columns: ${missingFields.join(", ")}. Expected headers like: m_molar (or [M]), s_molar (or [S]), i_molar (or [I]), temperature (K or °C), time (s or min).`,
-      convertedTemperature: false,
-      convertedTime: false,
-    };
-  }
-
-  if (hasExplicitMinutes && hasExplicitSeconds) {
-    return {
-      rows: [],
-      error:
-        "Conflicting time headers detected. Use either seconds (time_s/time (s)) or minutes (time_min/time (min)), not both.",
-      convertedTemperature: false,
-      convertedTime: false,
+      error: `Missing required columns: ${missingFields.join(", ")}. Required headers are: m_molar, s_molar, i_molar, temperature_k, time_s. Temperature and time headers must be exactly temperature_k and time_s.`,
     };
   }
 
@@ -169,8 +109,6 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     return {
       rows: [],
       error: `File contains ${dataRows.length} data rows. Maximum allowed is ${MAX_ROWS}.`,
-      convertedTemperature: false,
-      convertedTime: false,
     };
   }
 
@@ -218,35 +156,11 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
     return {
       rows: [],
       error: "No valid data rows found. Ensure rows have numeric values for all 5 input fields.",
-      convertedTemperature: false,
-      convertedTime: false,
     };
-  }
-
-  // Auto-detect and convert units
-  // Temperature: convert if header explicitly says °C, or (when no explicit Kelvin header)
-  // values are clearly Celsius-like by heuristic.
-  const tempValues = rows.map((r) => r.temperature_k);
-  const shouldConvertCelsius =
-    hasExplicitCelsius || (!hasExplicitKelvin && tempValues.every((t) => t < 200));
-  if (shouldConvertCelsius) {
-    for (const row of rows) {
-      row.temperature_k = row.temperature_k + 273.15;
-    }
-  }
-
-  // Time: convert only for explicit minute headers.
-  const shouldConvertMinutes = hasExplicitMinutes && !hasExplicitSeconds;
-  if (shouldConvertMinutes) {
-    for (const row of rows) {
-      row.time_s = row.time_s * 60;
-    }
   }
 
   return {
     rows,
     error: null,
-    convertedTemperature: shouldConvertCelsius,
-    convertedTime: shouldConvertMinutes,
   };
 }

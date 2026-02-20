@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { outputFieldDescriptions } from "@/lib/field-descriptions";
+import { formatTimeSeconds } from "@/lib/format-utils";
 import type { TimeSeriesResult } from "@/types/prediction";
 
 type MwMetric = "mn" | "mw" | "mz" | "mz_plus_1" | "mv";
@@ -39,13 +40,6 @@ const mwConfigs: Record<MwMetric, ChartConfig> = {
   mz_plus_1: { mz_plus_1: { label: "Mz+1 (Da)", color: "#fb923c" } },
   mv: { mv: { label: "Mv (Da)", color: "#fb923c" } },
 };
-
-function formatTimeSeconds(value: number | string): string {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return String(value);
-  if (Number.isInteger(numeric)) return numeric.toLocaleString("en-US");
-  return numeric.toLocaleString("en-US", { maximumFractionDigits: 2 });
-}
 
 interface ReactionChartInnerProps {
   data: TimeSeriesResult | null;

@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { outputFieldDescriptions } from "@/lib/field-descriptions";
+import { formatTimeSeconds } from "@/lib/format-utils";
 import type { CompareResult } from "@/types/prediction";
 
 type ModelKey = "baseline_nn" | "pcinn" | "sa_pcinn";
@@ -70,13 +71,6 @@ const metricConfigs: Record<MwMetric, ChartConfig> = {
     sa_pcinn_mv: { label: "SA-PCINN", color: "#fb923c" },
   },
 };
-
-function formatTimeSeconds(value: number | string): string {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return String(value);
-  if (Number.isInteger(numeric)) return numeric.toLocaleString("en-US");
-  return numeric.toLocaleString("en-US", { maximumFractionDigits: 2 });
-}
 
 interface ComparisonChartInnerProps {
   data: CompareResult | null;

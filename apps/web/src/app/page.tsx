@@ -241,8 +241,8 @@ export default function HomePage() {
               ["[M] Monomer", "0.5\u20135.0 mol/L"],
               ["[S] Solvent", "5.0\u20139.5 mol/L"],
               ["[I] Initiator", "0.005\u20130.1 mol/L"],
-              ["Temperature", "50\u201390 \u00b0C"],
-              ["Time", "0\u2013600 min"],
+              ["Temperature", "323\u2013363 K"],
+              ["Time", "1.2\u201335,854 s"],
             ].map(([label, range]) => (
               <div key={label} className="text-muted-foreground flex justify-between px-3 py-2">
                 <span>{label}</span>

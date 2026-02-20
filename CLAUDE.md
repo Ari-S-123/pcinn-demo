@@ -65,9 +65,11 @@ All endpoints under `/api/v1`. Key routes in `app/routers/predict.py`:
 
 Request validation uses Pydantic with domain bounds (e.g., `m_molar: 0.5-5.0`, `temperature_k: 323-363`). Schemas are in `app/schemas/prediction.py`.
 
-### Frontend: Unit Conversion
+### Frontend: Units and Input Normalization
 
-The form displays user-friendly units (°C, minutes) while the API expects scientific units (K, seconds). `src/lib/validation.ts` defines the Zod schema with display-unit ranges and `toApiUnits()` handles conversion before API calls.
+The frontend uses API-native units directly: Kelvin (`temperature_k`) and seconds (`time_s`).
+`src/lib/validation.ts` validates K/s ranges and `toApiUnits()` is a pass-through mapping.
+`src/lib/file-parser.ts` requires explicit Kelvin/seconds upload headers (`temperature_k`, `time_s`); legacy/ambiguous temperature/time headers are rejected and no unit auto-conversion is performed.
 
 ### Frontend: Key Patterns
 

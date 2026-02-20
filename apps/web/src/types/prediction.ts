@@ -71,8 +71,8 @@ export interface ParsedRow {
   m_molar: number;
   s_molar: number;
   i_molar: number;
-  temperature_c: number;
-  time_min: number;
+  temperature_k: number;
+  time_s: number;
 }
 
 export interface RowError {
@@ -86,8 +86,8 @@ export interface EnrichedRow {
   m_molar: number;
   s_molar: number;
   i_molar: number;
-  temperature_c: number;
-  time_min: number;
+  temperature_k: number;
+  time_s: number;
   conversion: number;
   mn: number;
   mw: number;

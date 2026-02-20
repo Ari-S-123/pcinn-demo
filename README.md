@@ -11,7 +11,7 @@ pcinn-demo/
 │   └── web/          # Next.js 16 frontend (React 19, shadcn/ui)
 ├── .github/
 │   └── workflows/
-│       └── lint.yml  # GitHub Actions lint workflow
+│       └── lint_test.yml  # GitHub Actions lint + test workflow
 ├── docker-compose.yml
 ├── railway.toml
 └── package.json      # Bun workspaces root
@@ -24,6 +24,7 @@ pcinn-demo/
 - Browser requests call FastAPI directly through `apps/web/src/lib/api-client.ts`.
 - Prediction requests run in parallel where possible and support cancellation to avoid stale UI state.
 - Route-level resilience/metadata files are enabled (`loading.tsx`, `error.tsx`, `not-found.tsx`, `robots.ts`, `sitemap.ts`, `opengraph-image.tsx`).
+- Frontend canonical units are Kelvin (`temperature_k`) and seconds (`time_s`); batch uploads require explicit `temperature_k` and `time_s` headers (no auto-conversion), with canonical columns `m_molar`, `s_molar`, `i_molar`, `temperature_k`, `time_s`.
 
 ## Models
 
@@ -44,8 +45,8 @@ All models share the same architecture: `Input(5) → Linear(128) → tanh → L
 | [M] Monomer concentration | mol/L | 0.5 – 5.0 |
 | [S] Solvent concentration | mol/L | 5.0 – 9.5 |
 | [I] Initiator concentration | mol/L | 0.005 – 0.1 |
-| Temperature | °C | 50 – 90 |
-| Time | min | 0.02 – 597.57 |
+| Temperature | K | 323 – 363 |
+| Time | s | 1.2 – 35,854 |
 
 ### Outputs
 
@@ -146,7 +147,7 @@ See `.env.example` for all variables. Key settings:
 
 ## CI
 
-GitHub Actions currently runs `bun run lint` for pushes and pull requests via `.github/workflows/lint.yml`.
+GitHub Actions currently runs `bun run lint` and `bun run test:api` for pushes and pull requests via `.github/workflows/lint_test.yml`.
 
 ## Tech Stack
 

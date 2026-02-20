@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { outputFieldDescriptions } from "@/lib/field-descriptions";
+import { formatTimeSeconds } from "@/lib/format-utils";
 import type { CompareResult } from "@/types/prediction";
 
 type ModelKey = "baseline_nn" | "pcinn" | "sa_pcinn";
@@ -80,7 +81,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
 
   const chartData = data.times.map((timeValue, i) => ({
     // Keep time numeric so Recharts can use a true number axis with sparse ticks.
-    time: timeValue / 60,
+    time: timeValue,
     baseline_nn: +data.baseline_nn.conversion[i].toFixed(4),
     pcinn: +data.pcinn.conversion[i].toFixed(4),
     sa_pcinn: +data.sa_pcinn.conversion[i].toFixed(4),
@@ -153,7 +154,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                     fill: "var(--muted-foreground)",
                   }}
                   label={{
-                    value: "Time (min)",
+                    value: "Time (s)",
                     position: "insideBottom",
                     offset: -4,
                     fontSize: 10,
@@ -177,9 +178,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                 <ChartTooltip
                   cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                   content={
-                    <ChartTooltipContent
-                      labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
-                    />
+                    <ChartTooltipContent labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`} />
                   }
                 />
                 <ChartLegend
@@ -229,7 +228,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                       fill: "var(--muted-foreground)",
                     }}
                     label={{
-                      value: "Time (min)",
+                      value: "Time (s)",
                       position: "insideBottom",
                       offset: -4,
                       fontSize: 10,
@@ -252,7 +251,7 @@ export function ComparisonChartInner({ data }: ComparisonChartInnerProps) {
                     cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                     content={
                       <ChartTooltipContent
-                        labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
+                        labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`}
                         formatter={(v) => `${Number(v).toLocaleString()} Da`}
                       />
                     }

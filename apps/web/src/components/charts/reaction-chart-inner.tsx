@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { outputFieldDescriptions } from "@/lib/field-descriptions";
+import { formatTimeSeconds } from "@/lib/format-utils";
 import type { TimeSeriesResult } from "@/types/prediction";
 
 type MwMetric = "mn" | "mw" | "mz" | "mz_plus_1" | "mv";
@@ -49,7 +50,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
 
   const chartData = data.times.map((timeValue, i) => ({
     // Keep time numeric so Recharts can use a true number axis with sparse ticks.
-    time: timeValue / 60,
+    time: timeValue,
     conversion: +data.conversion[i].toFixed(4),
     mn: +data.mn[i].toFixed(0),
     mw: +data.mw[i].toFixed(0),
@@ -110,7 +111,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                     fill: "var(--muted-foreground)",
                   }}
                   label={{
-                    value: "Time (min)",
+                    value: "Time (s)",
                     position: "insideBottom",
                     offset: -4,
                     fontSize: 10,
@@ -134,9 +135,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                 <ChartTooltip
                   cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                   content={
-                    <ChartTooltipContent
-                      labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
-                    />
+                    <ChartTooltipContent labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`} />
                   }
                 />
                 <Line
@@ -177,7 +176,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                       fill: "var(--muted-foreground)",
                     }}
                     label={{
-                      value: "Time (min)",
+                      value: "Time (s)",
                       position: "insideBottom",
                       offset: -4,
                       fontSize: 10,
@@ -200,7 +199,7 @@ export function ReactionChartInner({ data }: ReactionChartInnerProps) {
                     cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
                     content={
                       <ChartTooltipContent
-                        labelFormatter={(v) => `t = ${Number(v).toFixed(1)} min`}
+                        labelFormatter={(v) => `t = ${formatTimeSeconds(v)} s`}
                         formatter={(v) => `${Number(v).toLocaleString()} Da`}
                       />
                     }

@@ -56,7 +56,7 @@ const FIELDS = [
     unit: "s",
     min: 1.2,
     max: 35854,
-    step: 0.1,
+    step: 10,
   },
 ];
 

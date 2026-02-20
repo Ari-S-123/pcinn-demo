@@ -40,17 +40,16 @@ const HEADER_MAP: Record<string, CanonicalField> = {
   "time (minutes)": "time_s",
 };
 
-// Headers that explicitly indicate Celsius or minutes (need conversion to K / s)
+// Headers that explicitly indicate Celsius, Kelvin, seconds, or minutes.
 const CELSIUS_HEADERS = new Set([
   "temperature_c",
   "temp (°c)",
   "temperature (°c)",
   "temperature (c)",
 ]);
+const KELVIN_HEADERS = new Set(["temperature_k", "temp_k", "temp (k)", "temperature (k)"]);
 const SECONDS_HEADERS = new Set(["time_s", "time (s)", "time (sec)", "time (seconds)"]);
 const MINUTES_HEADERS = new Set(["time_min", "time (min)", "time (minutes)"]);
-// Legacy minute-based uploads max out near 35,854 s / 60 = 597.57 min.
-const MINUTES_HEURISTIC_MAX_SECONDS = 597.57;
 
 const REQUIRED_FIELDS: CanonicalField[] = [
   "m_molar",
@@ -65,7 +64,7 @@ export interface FileParseResult {
   error: string | null;
   /** Whether temperature was auto-detected as Celsius and converted to K */
   convertedTemperature: boolean;
-  /** Whether time was auto-detected as minutes and converted to s */
+  /** Whether time was converted from minutes to seconds */
   convertedTime: boolean;
 }
 
@@ -134,8 +133,9 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   const normalizedHeaders = headerRow.map(normalizeHeader);
   const columnMap: (CanonicalField | null)[] = normalizedHeaders.map((h) => HEADER_MAP[h] ?? null);
 
-  // Detect if the header explicitly indicates Celsius, seconds, or minutes
+  // Detect if the header explicitly indicates Celsius, Kelvin, seconds, or minutes
   const hasExplicitCelsius = normalizedHeaders.some((h) => CELSIUS_HEADERS.has(h));
+  const hasExplicitKelvin = normalizedHeaders.some((h) => KELVIN_HEADERS.has(h));
   const hasExplicitSeconds = normalizedHeaders.some((h) => SECONDS_HEADERS.has(h));
   const hasExplicitMinutes = normalizedHeaders.some((h) => MINUTES_HEADERS.has(h));
 
@@ -224,22 +224,19 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   }
 
   // Auto-detect and convert units
-  // Temperature: if header explicitly says °C, or all values < 200, treat as Celsius and convert to K
+  // Temperature: convert if header explicitly says °C, or (when no explicit Kelvin header)
+  // values are clearly Celsius-like by heuristic.
   const tempValues = rows.map((r) => r.temperature_k);
-  const isCelsius = hasExplicitCelsius || tempValues.every((t) => t < 200);
-  if (isCelsius) {
+  const shouldConvertCelsius =
+    hasExplicitCelsius || (!hasExplicitKelvin && tempValues.every((t) => t < 200));
+  if (shouldConvertCelsius) {
     for (const row of rows) {
       row.temperature_k = row.temperature_k + 273.15;
     }
   }
 
-  // Time: treat as minutes only for explicit minute headers, or when no explicit seconds header is present
-  // and values look minute-like by legacy heuristic.
-  const timeValues = rows.map((r) => r.time_s);
-  const maxTime = Math.max(...timeValues);
-  const isMinutes =
-    hasExplicitMinutes || (!hasExplicitSeconds && maxTime <= MINUTES_HEURISTIC_MAX_SECONDS);
-  const shouldConvertMinutes = isMinutes && !hasExplicitSeconds;
+  // Time: convert only for explicit minute headers.
+  const shouldConvertMinutes = hasExplicitMinutes && !hasExplicitSeconds;
   if (shouldConvertMinutes) {
     for (const row of rows) {
       row.time_s = row.time_s * 60;
@@ -249,7 +246,7 @@ export async function parseUploadFile(file: File): Promise<FileParseResult> {
   return {
     rows,
     error: null,
-    convertedTemperature: isCelsius,
+    convertedTemperature: shouldConvertCelsius,
     convertedTime: shouldConvertMinutes,
   };
 }
